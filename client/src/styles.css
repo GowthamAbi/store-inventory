@@ -5,6 +5,50 @@
   font-synthesis: none;
 }
 
+/* Blocks every click while one or more API requests are running. */
+.global-loader {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  cursor: wait;
+  background: rgba(7, 27, 23, 0.48);
+  backdrop-filter: blur(3px);
+  pointer-events: all;
+}
+.global-loader-box {
+  display: grid;
+  place-items: center;
+  min-width: 170px;
+  padding: 25px 30px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 18px;
+  background: white;
+  color: #123f36;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
+}
+.global-loader-box svg {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 12px;
+  color: #188267;
+  animation: global-loader-spin 0.85s linear infinite;
+}
+.global-loader-box b {
+  font-size: 16px;
+}
+.global-loader-box span {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+}
+@keyframes global-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .print-search-card {
   padding: 20px;
 }
