@@ -1,0 +1,96 @@
+import {
+  AlertTriangle,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Boxes,
+  Clock3,
+  FileClock,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Settings2,
+  ShoppingCart,
+  Sparkles,
+  X,
+} from "lucide-react";
+import { useState } from "react";
+import { useAuth } from "../../context/AuthContext.jsx";
+
+const navigation = [
+  ["Dashboard", LayoutDashboard],
+  ["Inward", ArrowDownToLine],
+  ["PO", ShoppingCart],
+  ["PO Pending", Clock3],
+  ["Outward", ArrowUpFromLine],
+  ["Stock", Boxes],
+  ["History", FileClock],
+  ["Master Data", Settings2],
+];
+
+export default function MainLayout({ page, onPageChange, children }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+
+  function selectPage(pageName) {
+    onPageChange(pageName);
+    setMenuOpen(false);
+  }
+
+  return (
+    <div className="app-shell">
+      <aside className={menuOpen ? "open" : ""}>
+        <div className="brand">
+          <span>
+            <Sparkles />
+          </span>
+          <div>
+            <b>YarnFlow</b>
+            <small>STORE MANAGER</small>
+          </div>
+          <button onClick={() => setMenuOpen(false)}>
+            <X />
+          </button>
+        </div>
+
+        <nav>
+          {navigation.map(([name, Icon]) => (
+            <button
+              className={page === name ? "active" : ""}
+              key={name}
+              onClick={() => selectPage(name)}
+            >
+              <Icon />
+              {name}
+            </button>
+          ))}
+        </nav>
+
+        <div className="profile">
+          <div>
+            <b>{user?.name}</b>
+            <small>{user?.role}</small>
+          </div>
+          <button onClick={logout}>
+            <LogOut />
+          </button>
+        </div>
+      </aside>
+
+      {menuOpen && <div className="shade" onClick={() => setMenuOpen(false)} />}
+
+      <main>
+        <header className="topbar">
+          <button className="menu" onClick={() => setMenuOpen(true)}>
+            <Menu />
+          </button>
+          <div>
+            <small>Yarn & Accessories</small>
+            <h1>{page}</h1>
+          </div>
+        </header>
+
+        <div className="page">{children}</div>
+      </main>
+    </div>
+  );
+}

@@ -1,0 +1,19 @@
+import PurchaseOrder from "../models/PurchaseOrder.js";
+
+export const purchaseOrderRepository = {
+  findAll: (filter = {}) =>
+    PurchaseOrder.find(filter).sort({ deliveryDate: 1 }),
+
+  findByNumber: (poNo, session = null) =>
+    PurchaseOrder.findOne({ poNo }).session(session),
+
+  create: (purchaseOrderData) => PurchaseOrder.create(purchaseOrderData),
+
+  update: (purchaseOrderId, purchaseOrderData) =>
+    PurchaseOrder.findByIdAndUpdate(purchaseOrderId, purchaseOrderData, {
+      new: true,
+      runValidators: true,
+    }),
+
+  remove: (purchaseOrderId) => PurchaseOrder.findByIdAndDelete(purchaseOrderId),
+};
