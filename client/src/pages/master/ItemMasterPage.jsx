@@ -18,7 +18,6 @@ const emptyItem = {
   colour: "",
   unit: "PCS",
   minimumQty: 0,
-  stockQty: 0,
 };
 
 export default function ItemMasterPage({ notify }) {
@@ -107,9 +106,7 @@ export default function ItemMasterPage({ notify }) {
                   required={["itemCode", "description", "category"].includes(
                     key,
                   )}
-                  type={
-                    ["minimumQty", "stockQty"].includes(key) ? "number" : "text"
-                  }
+                  type={key === "minimumQty" ? "number" : "text"}
                   value={form[key]}
                   onChange={(event) =>
                     setForm({ ...form, [key]: event.target.value })

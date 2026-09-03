@@ -9,5 +9,5 @@ await connectDatabase();
 const port = process.env.PORT || 5000;
 
 app.listen(port, () => {
-  console.log(`YarnFlow API running on port ${port}`);
+  console.log(`Accessories Flow API running on port ${port}`);
 });

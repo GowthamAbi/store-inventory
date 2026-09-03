@@ -1,7 +1,6 @@
 import {
   AlertTriangle,
   ArrowDownToLine,
-  ArrowUpFromLine,
   Boxes,
   Clock3,
   FileClock,
@@ -10,6 +9,7 @@ import {
   Menu,
   Settings2,
   ShoppingCart,
+  Printer,
   Sparkles,
   X,
 } from "lucide-react";
@@ -21,7 +21,7 @@ const navigation = [
   ["Inward", ArrowDownToLine],
   ["PO", ShoppingCart],
   ["PO Pending", Clock3],
-  ["Outward", ArrowUpFromLine],
+  ["Print", Printer],
   ["Stock", Boxes],
   ["History", FileClock],
   ["Master Data", Settings2],
@@ -44,8 +44,8 @@ export default function MainLayout({ page, onPageChange, children }) {
             <Sparkles />
           </span>
           <div>
-            <b>YarnFlow</b>
-            <small>STORE MANAGER</small>
+            <b>Accessories Flow</b>
+            <small>ACCESSORIES MANAGER</small>
           </div>
           <button onClick={() => setMenuOpen(false)}>
             <X />
@@ -84,7 +84,7 @@ export default function MainLayout({ page, onPageChange, children }) {
             <Menu />
           </button>
           <div>
-            <small>Yarn & Accessories</small>
+            <small>Accessories Store</small>
             <h1>{page}</h1>
           </div>
         </header>

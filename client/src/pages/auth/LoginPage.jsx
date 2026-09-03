@@ -33,7 +33,7 @@ export default function LoginPage() {
         <div className="auth-logo">
           <Sparkles />
         </div>
-        <h1>YarnFlow</h1>
+        <h1>Accessories Flow</h1>
         <p>{registerMode ? "Create store account" : "Sign in to continue"}</p>
 
         {registerMode && (

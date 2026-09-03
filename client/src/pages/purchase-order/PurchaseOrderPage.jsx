@@ -27,8 +27,6 @@ const emptyPurchaseOrder = {
   poDate: "",
   deliveryDate: "",
   orderQty: 0,
-  inwardQty: 0,
-  status: "Open",
 };
 
 export default function PurchaseOrderPage({ pending, notify }) {
@@ -76,18 +74,11 @@ export default function PurchaseOrderPage({ pending, notify }) {
     { key: "poNo", label: "PO no." },
     { key: "itemCode", label: "Item code" },
     { key: "orderQty", label: "Order qty" },
-    { key: "inwardQty", label: "Inward qty" },
-    {
-      key: "pendingQty",
-      label: "Pending",
-      render: (order) => Math.max(0, order.orderQty - order.inwardQty),
-    },
     {
       key: "deliveryDate",
       label: "Delivery",
       render: (order) => formatDate(order.deliveryDate),
     },
-    { key: "status", label: "Status" },
   ];
 
   const action = (
@@ -134,40 +125,12 @@ export default function PurchaseOrderPage({ pending, notify }) {
           <form className="form-grid" onSubmit={savePurchaseOrder}>
             {Object.keys(emptyPurchaseOrder).map((key) => (
               <Field key={key} label={formatLabel(key)}>
-                {key === "status" ? (
-                  <select
-                    value={form.status}
-                    onChange={(event) =>
-                      setForm({ ...form, status: event.target.value })
-                    }
-                  >
-                    {["Open", "Part received", "Completed", "Cancelled"].map(
-                      (status) => (
-                        <option key={status}>{status}</option>
-                      ),
-                    )}
-                  </select>
-                ) : (
-                  <input
-                    required={[
-                      "poNo",
-                      "itemCode",
-                      "deliveryDate",
-                      "orderQty",
-                    ].includes(key)}
-                    type={
-                      key.toLowerCase().includes("date")
-                        ? "date"
-                        : ["orderQty", "inwardQty"].includes(key)
-                          ? "number"
-                          : "text"
-                    }
-                    value={form[key] ?? ""}
-                    onChange={(event) =>
-                      setForm({ ...form, [key]: event.target.value })
-                    }
-                  />
-                )}
+                <input
+                  required={["poNo", "itemCode", "deliveryDate", "orderQty"].includes(key)}
+                  type={key.toLowerCase().includes("date") ? "date" : key === "orderQty" ? "number" : "text"}
+                  value={form[key] ?? ""}
+                  onChange={(event) => setForm({ ...form, [key]: event.target.value })}
+                />
               </Field>
             ))}
             <FormActions onCancel={() => setEditingOrder(null)} />

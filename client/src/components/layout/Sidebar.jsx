@@ -1,6 +1,5 @@
 import {
   ArrowDownToLine,
-  ArrowUpFromLine,
   Boxes,
   Clock3,
   FileClock,
@@ -8,6 +7,7 @@ import {
   LogOut,
   Settings2,
   ShoppingCart,
+  Printer,
   Sparkles,
   X,
 } from "lucide-react";
@@ -18,7 +18,7 @@ const links = [
   ["Inward", ArrowDownToLine],
   ["PO", ShoppingCart],
   ["PO Pending", Clock3],
-  ["Outward", ArrowUpFromLine],
+  ["Print", Printer],
   ["Stock", Boxes],
   ["History", FileClock],
   ["Master Data", Settings2],
@@ -33,8 +33,8 @@ export default function Sidebar({ page, open, onSelect, onClose }) {
           <Sparkles />
         </span>
         <div>
-          <b>YarnFlow</b>
-          <small>STORE MANAGER</small>
+          <b>Accessories Flow</b>
+          <small>ACCESSORIES MANAGER</small>
         </div>
         <button onClick={onClose}>
           <X />

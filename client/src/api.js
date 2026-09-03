@@ -1,7 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export async function api(path, options = {}) {
-  const token = localStorage.getItem("yarnflow_token");
+  const token = localStorage.getItem("accessories_flow_token");
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {

@@ -4,6 +4,7 @@ const schema = new mongoose.Schema(
     outwardNo: { type: String, required: true, unique: true },
     inwardNo: String,
     itemCode: { type: String, required: true },
+    itemName: { type: String, default: "" },
     dcNo: String,
     section: String,
     quantity: { type: Number, required: true },

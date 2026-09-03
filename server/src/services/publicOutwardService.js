@@ -62,6 +62,7 @@ export async function issueFromExactInward(data) {
       if (!data.dcNo?.trim() || !data.section?.trim()) {
         throw new ApiError(400, "DC No and section are required");
       }
+      if (!data.itemName?.trim()) throw new ApiError(400, "Item Name / usage is required");
 
       inward.balanceQty -= wantedQty;
       item.stockQty -= wantedQty;
@@ -75,6 +76,7 @@ export async function issueFromExactInward(data) {
             outwardNo,
             inwardNo: inward.inwardNo,
             itemCode: inward.itemCode,
+            itemName: data.itemName.trim(),
             dcNo: data.dcNo.trim(),
             section: data.section.trim(),
             quantity: wantedQty,
@@ -89,10 +91,11 @@ export async function issueFromExactInward(data) {
             kind: "OUTWARD",
             inwardReference: inward.inwardNo,
             itemCode: inward.itemCode,
+            itemName: data.itemName.trim(),
             dcNo: data.dcNo.trim(),
             section: data.section.trim(),
             quantity: wantedQty,
-            balanceQty: item.stockQty,
+            balanceQty: inward.balanceQty,
             createdBy: "QR User",
           },
         ],
@@ -100,12 +103,25 @@ export async function issueFromExactInward(data) {
       );
 
       result = {
+        referenceNo: outwardNo,
+        kind: "OUTWARD",
         outwardNo,
         inwardNo: inward.inwardNo,
+        inwardReference: inward.inwardNo,
         itemCode: inward.itemCode,
+        itemName: data.itemName.trim(),
+        description: item.description,
+        brand: item.brand,
+        type: item.type,
+        colour: item.colour,
+        dcNo: data.dcNo.trim(),
+        section: data.section.trim(),
+        quantity: wantedQty,
         issuedQty: wantedQty,
         availableQty: inward.balanceQty,
+        balanceQty: inward.balanceQty,
         unit: item.unit,
+        transactionDate: new Date(),
       };
     });
 

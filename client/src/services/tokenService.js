@@ -1,5 +1,5 @@
-const TOKEN_KEY = "yarnflow_token";
-const USER_KEY = "yarnflow_user";
+const TOKEN_KEY = "accessories_flow_token";
+const USER_KEY = "accessories_flow_user";
 
 export const tokenService = {
   getToken: () => localStorage.getItem(TOKEN_KEY),

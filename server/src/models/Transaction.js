@@ -6,6 +6,7 @@ const transactionSchema = new mongoose.Schema(
     kind: { type: String, enum: ["INWARD", "OUTWARD"], required: true },
     inwardReference: { type: String, default: "" },
     itemCode: { type: String, required: true, uppercase: true },
+    itemName: { type: String, default: "" },
     poNo: { type: String, default: "" },
     dcNo: { type: String, default: "" },
     section: { type: String, default: "" },

@@ -5,6 +5,186 @@
   font-synthesis: none;
 }
 
+.print-search-card {
+  padding: 20px;
+}
+.print-search-card form {
+  display: flex;
+  gap: 12px;
+}
+.print-search-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.print-search-option h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+.print-search-card input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #cbd9d4;
+  border-radius: 10px;
+  font: inherit;
+}
+.transaction-print {
+  max-width: 850px;
+  margin: 22px auto 0;
+  padding: 28px;
+}
+.transaction-print > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 18px;
+  border-bottom: 2px solid #188267;
+}
+.transaction-print h2,
+.transaction-print p {
+  margin: 0;
+}
+.transaction-print p {
+  margin-top: 5px;
+  color: #64748b;
+}
+.transaction-print dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  margin: 22px 0;
+  background: #dde7e3;
+  border: 1px solid #dde7e3;
+}
+.transaction-print dl > div {
+  padding: 12px;
+  background: white;
+}
+.transaction-print dt {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+.transaction-print dd {
+  margin: 5px 0 0;
+  font-weight: 700;
+}
+.transaction-print footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.dc-print {
+  margin-top: 22px;
+  padding: 28px;
+}
+.dc-print > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 18px;
+  border-bottom: 2px solid #188267;
+}
+.dc-print h2,
+.dc-print p {
+  margin: 0;
+}
+.dc-meta {
+  display: grid;
+  gap: 5px;
+  text-align: right;
+}
+.dc-print table {
+  width: 100%;
+  margin-top: 22px;
+  border-collapse: collapse;
+}
+.dc-print th,
+.dc-print td {
+  padding: 10px;
+  border: 1px solid #dce7e3;
+  text-align: left;
+}
+.dc-print th {
+  background: #edf7f3;
+}
+.dc-print tfoot td {
+  font-weight: 800;
+}
+.dc-print tfoot td:first-child {
+  text-align: right;
+}
+.remarks {
+  margin-top: 25px;
+}
+.remarks span {
+  display: block;
+  height: 32px;
+  border-bottom: 1px solid #8fa29c;
+}
+.signatures {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 70px;
+  margin-top: 70px;
+  text-align: center;
+}
+.signatures span {
+  display: block;
+  border-top: 1px solid #53645f;
+  margin-bottom: 8px;
+}
+.dc-print footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 35px;
+}
+.public-message.success p {
+  margin: 0 0 8px;
+}
+.public-message.success button {
+  border: 1px solid #08734f;
+  border-radius: 8px;
+  background: white;
+  color: #08734f;
+  padding: 8px 10px;
+}
+@media (max-width: 600px) {
+  .print-search-card {
+    grid-template-columns: 1fr;
+  }
+  .print-search-card form,
+  .transaction-print > header {
+    flex-direction: column;
+  }
+  .transaction-print dl {
+    grid-template-columns: 1fr;
+  }
+}
+@media print {
+  .app-shell > aside,
+  .topbar,
+  .no-print,
+  .page > .title {
+    display: none !important;
+  }
+  .app-shell > main {
+    margin: 0 !important;
+  }
+  .page {
+    padding: 0 !important;
+  }
+  .transaction-print,
+  .dc-print {
+    max-width: none;
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+  }
+}
+
 /* Standalone QR outward page: deliberately has no app sidebar or dashboard. */
 .public-outward-page {
   min-height: 100vh;

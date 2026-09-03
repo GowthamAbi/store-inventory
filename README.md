@@ -1,11 +1,11 @@
-# YarnFlow — Yarn & Accessories Store Manager
+# Accessories Flow — Accessories Store Manager
 
 Readable MERN project with separate `client` and `server` folders.
 
 ## Folder structure
 
 ```
-YarnFlow-MERN/
+Store/
 ├── client/                 React + Vite frontend
 │   └── src/
 │       ├── components/     Reusable UI components
@@ -54,4 +54,3 @@ Backend: `http://localhost:5000`
 - Date/category transaction history
 - CSV export
 - Login and registration using JWT
-

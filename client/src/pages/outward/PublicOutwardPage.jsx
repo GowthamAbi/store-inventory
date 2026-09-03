@@ -4,10 +4,12 @@ import {
   createPublicOutward,
   getPublicInward,
 } from "../../api/publicOutwardApi.js";
+import { downloadTransactionPdf } from "../../services/printService.js";
 
 export default function PublicOutwardPage({ inwardNo }) {
   const [inward, setInward] = useState(null);
-  const [form, setForm] = useState({ dcNo: "", section: "", wantedMtr: "" });
+  const [receipt, setReceipt] = useState(null);
+  const [form, setForm] = useState({ itemName: "", dcNo: "", section: "", wantedMtr: "" });
   const [status, setStatus] = useState({
     loading: true,
     saving: false,
@@ -19,6 +21,7 @@ export default function PublicOutwardPage({ inwardNo }) {
     getPublicInward(inwardNo)
       .then((data) => {
         setInward(data);
+        setForm((current) => ({ ...current, itemName: data.description || "" }));
         setStatus((current) => ({ ...current, loading: false }));
       })
       .catch((error) =>
@@ -41,10 +44,10 @@ export default function PublicOutwardPage({ inwardNo }) {
     event.preventDefault();
     const wantedQty = Number(form.wantedMtr);
 
-    if (!form.dcNo.trim() || !form.section.trim() || wantedQty <= 0) {
+    if (!form.itemName.trim() || !form.dcNo.trim() || !form.section.trim() || wantedQty <= 0) {
       setStatus((current) => ({
         ...current,
-        error: "DC No, section and valid wanted Mtr are required",
+        error: "Item Name, DC No, Section Name and valid Wanted Mtr are required",
         success: "",
       }));
       return;
@@ -60,6 +63,7 @@ export default function PublicOutwardPage({ inwardNo }) {
     try {
       const result = await createPublicOutward({
         inwardNo,
+        itemName: form.itemName.trim(),
         dcNo: form.dcNo.trim(),
         section: form.section.trim(),
         wantedQty,
@@ -69,6 +73,7 @@ export default function PublicOutwardPage({ inwardNo }) {
         ...current,
         availableQty: result.availableQty,
       }));
+      setReceipt(result);
       setForm((current) => ({ ...current, wantedMtr: "" }));
       setStatus({
         loading: false,
@@ -101,7 +106,7 @@ export default function PublicOutwardPage({ inwardNo }) {
           </span>
           <div>
             <h1>Outward Entry</h1>
-            <p>QR-linked inward stock issue</p>
+            <p>Accessories Flow · QR-linked stock issue</p>
           </div>
         </header>
 
@@ -149,6 +154,10 @@ export default function PublicOutwardPage({ inwardNo }) {
 
         <form className="public-outward-form" onSubmit={submitOutward}>
           <label>
+            <span>Inward Reference</span>
+            <input value={inward.inwardNo} readOnly />
+          </label>
+          <label>
             <span>DC No.</span>
             <input
               name="dcNo"
@@ -159,10 +168,10 @@ export default function PublicOutwardPage({ inwardNo }) {
           </label>
           <label>
             <span>Item Name</span>
-            <input value={inward.description} readOnly />
+            <input name="itemName" value={form.itemName} onChange={updateField} placeholder="Enter item usage name" />
           </label>
           <label>
-            <span>Section / Issued To</span>
+            <span>Section Name / Issued To</span>
             <input
               name="section"
               value={form.section}
@@ -188,7 +197,10 @@ export default function PublicOutwardPage({ inwardNo }) {
             <p className="public-message error">{status.error}</p>
           )}
           {status.success && (
-            <p className="public-message success">{status.success}</p>
+            <div className="public-message success">
+              <p>{status.success}</p>
+              <button type="button" onClick={() => downloadTransactionPdf(receipt)}>Download Outward PDF</button>
+            </div>
           )}
 
           <button

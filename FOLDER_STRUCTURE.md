@@ -1,7 +1,7 @@
-# YarnFlow MVC Folder Structure
+# Accessories Flow MVC Folder Structure
 
 ```text
-YarnFlow-MVC/
+Store/
 │
 ├── README.md
 ├── FOLDER_STRUCTURE.md
