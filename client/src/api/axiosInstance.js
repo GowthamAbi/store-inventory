@@ -1,26 +1,19 @@
 import { tokenService } from "../services/tokenService.js";
-import { beginLoading, endLoading } from "../services/loadingService.js";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export async function request(path, options = {}) {
-  beginLoading();
+  const token = tokenService.getToken();
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    },
+  });
 
-  try {
-    const token = tokenService.getToken();
-    const response = await fetch(`${API_URL}${path}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-    });
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Request failed");
-    return data;
-  } finally {
-    endLoading();
-  }
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "Request failed");
+  return data;
 }

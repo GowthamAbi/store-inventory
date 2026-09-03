@@ -21,3 +21,21 @@ export function subscribeToLoading(listener) {
   listener(pendingRequests > 0);
   return () => listeners.delete(listener);
 }
+
+export function installGlobalFetchLoader() {
+  if (window.__accessoriesFlowFetchLoaderInstalled) return;
+
+  const originalFetch = window.fetch.bind(window);
+
+  window.fetch = async (...argumentsList) => {
+    beginLoading();
+
+    try {
+      return await originalFetch(...argumentsList);
+    } finally {
+      endLoading();
+    }
+  };
+
+  window.__accessoriesFlowFetchLoaderInstalled = true;
+}

@@ -1,26 +1,18 @@
-import { beginLoading, endLoading } from "./services/loadingService.js";
-
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export async function api(path, options = {}) {
-  beginLoading();
-
-  try {
-    const token = localStorage.getItem("accessories_flow_token");
-    const response = await fetch(`${API_URL}${path}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Request failed");
-    return data;
-  } finally {
-    endLoading();
-  }
+  const token = localStorage.getItem("accessories_flow_token");
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "Request failed");
+  return data;
 }
 
 export function exportCsv(filename, rows) {
