@@ -74,6 +74,7 @@ export async function getOutwardsByDcNo(request, response) {
     return {
       ...entry,
       serialNo: index + 1,
+      description: item?.description || entry.itemCode,
       itemName: entry.itemName || item?.description || entry.itemCode,
       unit: item?.unit || "",
     };
@@ -82,7 +83,11 @@ export async function getOutwardsByDcNo(request, response) {
   response.json({
     dcNo: transactions[0].dcNo,
     date: transactions[0].transactionDate,
+    descriptions: [...new Set(entries.map((entry) => entry.description))],
     itemNames: [...new Set(entries.map((entry) => entry.itemName))],
+    sectionNames: [
+      ...new Set(entries.map((entry) => entry.section).filter(Boolean)),
+    ],
     totalQuantity: entries.reduce((total, entry) => total + entry.quantity, 0),
     entries,
   });

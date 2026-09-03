@@ -99,6 +99,7 @@
 .dc-print > header {
   display: flex;
   justify-content: space-between;
+  align-items: start;
   gap: 24px;
   padding-bottom: 18px;
   border-bottom: 2px solid #188267;
@@ -111,6 +112,13 @@
   display: grid;
   gap: 5px;
   text-align: right;
+}
+.manual-size {
+  display: inline-block;
+  min-width: 210px;
+  padding-top: 8px;
+  border-bottom: 1px solid #53645f;
+  text-align: left;
 }
 .dc-print table {
   width: 100%;
@@ -182,6 +190,13 @@
   .receipt-qr {
     flex-direction: column;
     text-align: center;
+  }
+  .dc-print > header {
+    flex-direction: column;
+  }
+  .dc-meta {
+    margin-top: 14px;
+    text-align: left;
   }
 }
 @media print {

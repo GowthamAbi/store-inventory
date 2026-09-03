@@ -175,6 +175,10 @@ export default function PrintPage({ notify }) {
               <b>DC No: {dcReport.dcNo}</b>
               <span>Date: {new Date(dcReport.date).toLocaleDateString()}</span>
               <span>Item Name: {dcReport.itemNames.join(", ")}</span>
+              <span>
+                Section Name: {dcReport.sectionNames.join(", ") || "—"}
+              </span>
+              <span className="manual-size">Size:</span>
             </div>
           </header>
           <div className="table-wrap">
@@ -183,10 +187,9 @@ export default function PrintPage({ notify }) {
                 <tr>
                   <th>S.No</th>
                   <th>Outward No.</th>
-                  <th>Inward Reference</th>
+                  <th>Inward No.</th>
+                  <th>Item Description</th>
                   <th>Item Code</th>
-                  <th>Item Name</th>
-                  <th>Section Name</th>
                   <th>Quantity</th>
                 </tr>
               </thead>
@@ -196,9 +199,8 @@ export default function PrintPage({ notify }) {
                     <td>{index + 1}</td>
                     <td>{entry.referenceNo}</td>
                     <td>{entry.inwardReference || "—"}</td>
+                    <td>{entry.description}</td>
                     <td>{entry.itemCode}</td>
-                    <td>{entry.itemName}</td>
-                    <td>{entry.section || "—"}</td>
                     <td>
                       {entry.quantity} {entry.unit}
                     </td>
@@ -207,7 +209,7 @@ export default function PrintPage({ notify }) {
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan="6">Total</td>
+                  <td colSpan="5">Total Quantity</td>
                   <td>{dcReport.totalQuantity}</td>
                 </tr>
               </tfoot>

@@ -72,7 +72,7 @@ export async function downloadTransactionPdf(record) {
 export function downloadDcPdf(report) {
   if (!report) return;
   const pdf = new jsPDF({ orientation: "landscape" });
-  const columns = [15, 28, 62, 101, 132, 190, 240];
+  const columns = [12, 27, 70, 115, 205, 245];
 
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(19);
@@ -83,17 +83,20 @@ export function downloadDcPdf(report) {
   pdf.text(`DC No: ${report.dcNo}`, 15, 38);
   pdf.text(`Date: ${new Date(report.date).toLocaleDateString()}`, 100, 38);
   pdf.text(`Item Name: ${report.itemNames.join(", ")}`, 15, 47, {
-    maxWidth: 265,
+    maxWidth: 125,
   });
+  pdf.text(`Section Name: ${report.sectionNames.join(", ") || "-"}`, 150, 47, {
+    maxWidth: 130,
+  });
+  pdf.text("Size: __________________________", 15, 57);
 
-  let y = 61;
+  let y = 70;
   const headers = [
     "S.No",
     "Outward No",
-    "Inward Reference",
+    "Inward No",
+    "Item Description",
     "Item Code",
-    "Item Name",
-    "Section",
     "Quantity",
   ];
   headers.forEach((header, index) => pdf.text(header, columns[index], y));
@@ -110,14 +113,13 @@ export function downloadDcPdf(report) {
       index + 1,
       entry.referenceNo,
       entry.inwardReference || "-",
+      entry.description,
       entry.itemCode,
-      entry.itemName,
-      entry.section || "-",
       `${entry.quantity} ${entry.unit || ""}`,
     ];
     values.forEach((value, columnIndex) =>
       pdf.text(String(value), columns[columnIndex], y, {
-        maxWidth: columnIndex === 4 ? 54 : 38,
+        maxWidth: columnIndex === 3 ? 82 : 38,
       }),
     );
     y += 9;
