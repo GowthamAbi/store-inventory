@@ -1,4 +1,5 @@
 import { jsPDF } from "jspdf";
+import QRCode from "qrcode";
 
 function rowsFor(record) {
   return [
@@ -30,7 +31,7 @@ function rowsFor(record) {
   ];
 }
 
-export function downloadTransactionPdf(record) {
+export async function downloadTransactionPdf(record) {
   if (!record) return;
   const referenceNo = record.referenceNo || record.outwardNo || record.inwardNo;
   const pdf = new jsPDF();
@@ -51,6 +52,20 @@ export function downloadTransactionPdf(record) {
     pdf.text(String(value), 72, y);
     y += 10;
   });
+
+  if (record.kind === "INWARD") {
+    const qrLink = `${window.location.origin}/outward?inwardNo=${encodeURIComponent(record.referenceNo)}`;
+    const qrDataUrl = await QRCode.toDataURL(qrLink, {
+      width: 500,
+      margin: 2,
+      errorCorrectionLevel: "M",
+    });
+    pdf.addImage(qrDataUrl, "PNG", 145, 45, 48, 48);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9);
+    pdf.text("Scan for Outward Entry", 151, 98);
+  }
+
   pdf.save(`${referenceNo}.pdf`);
 }
 

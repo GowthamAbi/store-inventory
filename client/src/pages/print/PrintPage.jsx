@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Download, Printer, Search } from "lucide-react";
 import { api } from "../../api.js";
 import PageTitle from "../../components/common/PageTitle.jsx";
+import QRGenerator from "../../components/qr/QRGenerator.jsx";
 import {
   downloadDcPdf,
   downloadTransactionPdf,
@@ -31,6 +32,11 @@ export default function PrintPage({ notify }) {
   const [dcNo, setDcNo] = useState("");
   const [dcReport, setDcReport] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const inwardQrLink =
+    record?.kind === "INWARD"
+      ? `${window.location.origin}/outward?inwardNo=${encodeURIComponent(record.referenceNo)}`
+      : "";
 
   async function findRecord(event) {
     event.preventDefault();
@@ -128,6 +134,22 @@ export default function PrintPage({ notify }) {
               </div>
             ))}
           </dl>
+          {record.kind === "INWARD" && (
+            <div className="receipt-qr">
+              <QRGenerator value={inwardQrLink} size={190} />
+              <div>
+                <b>Inward QR Code</b>
+                <p>
+                  Scan this QR to open the outward entry for{" "}
+                  {record.referenceNo}.
+                </p>
+                <small>
+                  This regenerated QR can be used if the original inward label
+                  is missing.
+                </small>
+              </div>
+            </div>
+          )}
           <footer className="no-print">
             <button onClick={printTransaction}>
               <Printer /> Print

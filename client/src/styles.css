@@ -75,6 +75,23 @@
   justify-content: flex-end;
   gap: 10px;
 }
+.receipt-qr {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin: 22px 0;
+  padding: 18px;
+  border: 1px dashed #188267;
+  border-radius: 14px;
+  background: #f5fbf8;
+}
+.receipt-qr p {
+  margin: 7px 0;
+  color: #435b54;
+}
+.receipt-qr small {
+  color: #64748b;
+}
 .dc-print {
   margin-top: 22px;
   padding: 28px;
@@ -161,6 +178,10 @@
   }
   .transaction-print dl {
     grid-template-columns: 1fr;
+  }
+  .receipt-qr {
+    flex-direction: column;
+    text-align: center;
   }
 }
 @media print {
