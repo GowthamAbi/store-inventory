@@ -45,7 +45,9 @@ export default function PurchaseOrderPage({ pending, notify }) {
     }
   }
 
-  useEffect(loadPurchaseOrders, [pending]);
+  useEffect(() => {
+    loadPurchaseOrders();
+  }, [pending]);
 
   function openEdit(order) {
     setEditingOrder(order);

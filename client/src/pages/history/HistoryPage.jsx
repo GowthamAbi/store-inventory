@@ -23,7 +23,9 @@ export default function HistoryPage() {
     }
   }
 
-  useEffect(loadTransactions, []);
+  useEffect(() => {
+    loadTransactions();
+  }, []);
 
   const columns = [
     { key: "referenceNo", label: "Reference" },

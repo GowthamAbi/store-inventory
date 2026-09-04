@@ -35,7 +35,9 @@ export default function ItemMasterPage({ notify }) {
     }
   }
 
-  useEffect(loadItems, []);
+  useEffect(() => {
+    loadItems();
+  }, []);
 
   function openNewItem() {
     setEditingItem({});

@@ -11,7 +11,9 @@ export default function DataTable({
   const [columnFilters, setColumnFilters] = useState({});
   const [openFilter, setOpenFilter] = useState("");
   const valueFor = (row, column) =>
-    column.filterValue ? column.filterValue(row) : row[column.key];
+    typeof column.filterValue === "function"
+      ? column.filterValue(row)
+      : row[column.key];
 
   const filteredRows = useMemo(
     () =>
@@ -77,7 +79,7 @@ export default function DataTable({
               <tr key={row._id || row.referenceNo || row.itemCode}>
                 {columns.map((column) => (
                   <td key={column.key}>
-                    {column.render
+                    {typeof column.render === "function"
                       ? column.render(row)
                       : (row[column.key] ?? "—")}
                   </td>
