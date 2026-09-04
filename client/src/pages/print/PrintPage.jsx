@@ -58,7 +58,7 @@ function TransactionReceipt({ record }) {
         </div>
       )}
       <footer className="no-print">
-        <button onClick={printTransaction}><Printer /> Print</button>
+        <button onClick={() => printTransaction("transaction-print")}><Printer /> Print</button>
         <button className="primary" onClick={() => downloadTransactionPdf(record)}><Download /> Download PDF</button>
       </footer>
     </section>
@@ -68,8 +68,6 @@ function TransactionReceipt({ record }) {
 export default function PrintPage({ notify }) {
   const [referenceNo, setReferenceNo] = useState("");
   const [record, setRecord] = useState(null);
-  const [secondReferenceNo, setSecondReferenceNo] = useState("");
-  const [secondRecord, setSecondRecord] = useState(null);
   const [dcNo, setDcNo] = useState("");
   const [dcReport, setDcReport] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -79,19 +77,11 @@ export default function PrintPage({ notify }) {
     if (!referenceNo.trim()) return;
     setLoading(true);
     setRecord(null);
-    setSecondRecord(null);
     try {
       const first = await api(
           `/transactions/reference/${encodeURIComponent(referenceNo.trim())}`,
         );
       setRecord(first);
-      if (secondReferenceNo.trim()) {
-        const second = await api(`/transactions/reference/${encodeURIComponent(secondReferenceNo.trim())}`);
-        if (first.kind !== "INWARD" || second.kind !== "INWARD") {
-          throw new Error("Two-label printing supports inward numbers only");
-        }
-        setSecondRecord(second);
-      }
     } catch (error) {
       notify(error.message);
     } finally {
@@ -133,11 +123,6 @@ export default function PrintPage({ notify }) {
               }
               placeholder="INW-... or OUT-..."
             />
-            <input
-              value={secondReferenceNo}
-              onChange={(event) => setSecondReferenceNo(event.target.value.toUpperCase())}
-              placeholder="Second inward no. (optional)"
-            />
             <button className="primary" disabled={loading}>
               <Search /> View
             </button>
@@ -160,7 +145,6 @@ export default function PrintPage({ notify }) {
 
       {record && <div className="transaction-print-sheet" id="transaction-print">
         <TransactionReceipt record={record} />
-        {secondRecord && <TransactionReceipt record={secondRecord} />}
       </div>}
 
       {dcReport && (
@@ -236,7 +220,7 @@ export default function PrintPage({ notify }) {
             </div>
           </div>
           <footer className="no-print">
-            <button onClick={printTransaction}>
+            <button onClick={() => printTransaction("dc-print")}>
               <Printer /> Print
             </button>
             <button className="primary" onClick={() => downloadDcPdf(dcReport)}>

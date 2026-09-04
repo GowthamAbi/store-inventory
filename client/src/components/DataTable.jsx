@@ -8,16 +8,17 @@ export default function DataTable({
   empty = "No records found",
 }) {
   const [columnFilters, setColumnFilters] = useState({});
+  const [openFilter, setOpenFilter] = useState("");
+  const valueFor = (row, column) =>
+    column.filterValue ? column.filterValue(row) : row[column.key];
+
   const filteredRows = useMemo(
     () =>
       rows.filter((row) =>
         columns.every((column) => {
           const filter = (columnFilters[column.key] || "").trim().toLowerCase();
           if (!filter) return true;
-          const value = column.filterValue
-            ? column.filterValue(row)
-            : row[column.key];
-          return String(value ?? "").toLowerCase().includes(filter);
+          return String(valueFor(row, column) ?? "").toLowerCase() === filter;
         }),
       ),
     [rows, columns, columnFilters],
@@ -29,27 +30,34 @@ export default function DataTable({
         <thead>
           <tr>
             {columns.map((column) => (
-              <th key={column.key}>{column.label}</th>
-            ))}
-            {(onEdit || onDelete) && <th>Actions</th>}
-          </tr>
-          <tr className="column-filters">
-            {columns.map((column) => (
-              <th key={column.key}>
-                <input
-                  aria-label={`Filter ${column.label}`}
-                  placeholder="Filter..."
-                  value={columnFilters[column.key] || ""}
-                  onChange={(event) =>
-                    setColumnFilters((current) => ({
-                      ...current,
-                      [column.key]: event.target.value,
-                    }))
-                  }
-                />
+              <th key={column.key} className="filterable-heading">
+                <button
+                  type="button"
+                  className={columnFilters[column.key] ? "active" : ""}
+                  onClick={() => setOpenFilter((current) => current === column.key ? "" : column.key)}
+                >
+                  {column.label} <span>▼</span>
+                </button>
+                {openFilter === column.key && (
+                  <select
+                    autoFocus
+                    value={columnFilters[column.key] || ""}
+                    onChange={(event) => {
+                      setColumnFilters((current) => ({ ...current, [column.key]: event.target.value }));
+                      setOpenFilter("");
+                    }}
+                    onBlur={() => setOpenFilter("")}
+                  >
+                    <option value="">All</option>
+                    {[...new Set(rows.map((row) => String(valueFor(row, column) ?? "")))]
+                      .filter(Boolean)
+                      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+                      .map((value) => <option key={value} value={value.toLowerCase()}>{value}</option>)}
+                  </select>
+                )}
               </th>
             ))}
-            {(onEdit || onDelete) && <th />}
+            {(onEdit || onDelete) && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
