@@ -72,7 +72,21 @@ export async function downloadTransactionPdf(record) {
 export function downloadDcPdf(report) {
   if (!report) return;
   const pdf = new jsPDF({ orientation: "landscape" });
-  const columns = [12, 27, 70, 115, 205, 245];
+  const columns = [12, 25, 62, 100, 181, 216, 246];
+  const widths = [10, 34, 35, 76, 30, 27, 36];
+  const headers = [
+    "S.No", "Outward No", "Inward No", "Item Description",
+    "Item Code", "Colour", "Quantity",
+  ];
+
+  function drawTableHeader(y) {
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9);
+    headers.forEach((header, index) => pdf.text(header, columns[index], y));
+    pdf.line(10, y + 3, 287, y + 3);
+    pdf.setFont("helvetica", "normal");
+    return y + 10;
+  }
 
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(19);
@@ -91,41 +105,38 @@ export function downloadDcPdf(report) {
   pdf.text("Size: __________________________", 15, 57);
 
   let y = 70;
-  const headers = [
-    "S.No",
-    "Outward No",
-    "Inward No",
-    "Item Description",
-    "Item Code",
-    "Quantity",
-  ];
-  headers.forEach((header, index) => pdf.text(header, columns[index], y));
-  pdf.line(15, y + 3, 282, y + 3);
-  y += 11;
-  pdf.setFont("helvetica", "normal");
+  y = drawTableHeader(y);
 
   report.entries.forEach((entry, index) => {
-    if (y > 180) {
-      pdf.addPage();
-      y = 20;
-    }
     const values = [
-      index + 1,
-      entry.referenceNo,
-      entry.inwardReference || "-",
-      entry.description,
-      entry.itemCode,
+      index + 1, entry.referenceNo, entry.inwardReference || "-",
+      entry.description, entry.itemCode, entry.colour || "-",
       `${entry.quantity} ${entry.unit || ""}`,
     ];
-    values.forEach((value, columnIndex) =>
-      pdf.text(String(value), columns[columnIndex], y, {
-        maxWidth: columnIndex === 3 ? 82 : 38,
-      }),
+    const wrapped = values.map((value, columnIndex) =>
+      pdf.splitTextToSize(String(value), widths[columnIndex]),
     );
-    y += 9;
+    const rowHeight = Math.max(...wrapped.map((lines) => lines.length)) * 4.5 + 4;
+
+    if (y + rowHeight > 185) {
+      pdf.addPage();
+      y = drawTableHeader(20);
+    }
+    wrapped.forEach((lines, columnIndex) => {
+      const centered = columnIndex === 0 || columnIndex === 5 || columnIndex === 6;
+      pdf.text(lines, centered ? columns[columnIndex] + widths[columnIndex] / 2 : columns[columnIndex], y + 4, {
+        align: centered ? "center" : "left",
+      });
+    });
+    pdf.line(10, y + rowHeight, 287, y + rowHeight);
+    y += rowHeight;
   });
 
-  pdf.line(15, y, 282, y);
+  if (y + 70 > 200) {
+    pdf.addPage();
+    y = 20;
+  }
+  pdf.line(10, y, 287, y);
   pdf.setFont("helvetica", "bold");
   pdf.text(`Total: ${report.totalQuantity}`, 240, y + 9);
   pdf.text("Remarks:", 15, y + 19);

@@ -76,6 +76,7 @@ export async function getOutwardsByDcNo(request, response) {
       serialNo: index + 1,
       description: item?.description || entry.itemCode,
       itemName: entry.itemName || item?.description || entry.itemCode,
+      colour: item?.colour || "",
       unit: item?.unit || "",
     };
   });

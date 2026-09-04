@@ -78,6 +78,34 @@
   margin: 22px auto 0;
   padding: 28px;
 }
+.transaction-print-sheet {
+  max-width: 850px;
+  margin: 0 auto;
+}
+.transaction-print-sheet .transaction-print {
+  max-width: none;
+}
+.transaction-print.inward-label {
+  min-height: 133mm;
+  padding: 18px 24px;
+}
+.transaction-print.inward-label > header {
+  padding-bottom: 10px;
+}
+.transaction-print.inward-label dl {
+  margin: 12px 0;
+  grid-template-columns: repeat(3, 1fr);
+}
+.transaction-print.inward-label dl > div {
+  padding: 7px 10px;
+}
+.transaction-print.inward-label dd {
+  font-size: 15px;
+}
+.transaction-print.inward-label .receipt-qr {
+  margin: 10px 0;
+  padding: 10px;
+}
 .transaction-print > header {
   display: flex;
   justify-content: space-between;
@@ -178,6 +206,9 @@
 .dc-print th {
   background: #edf7f3;
 }
+.dc-print .center-cell {
+  text-align: center;
+}
 .dc-print tfoot td {
   font-weight: 800;
 }
@@ -244,6 +275,10 @@
   }
 }
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
   .app-shell > aside,
   .topbar,
   .no-print,
@@ -262,6 +297,28 @@
     margin: 0;
     border: 0;
     box-shadow: none;
+  }
+  .transaction-print-sheet {
+    max-width: none;
+    margin: 0;
+  }
+  .transaction-print.inward-label {
+    min-height: 136mm;
+    max-height: 136mm;
+    padding: 7mm;
+    overflow: hidden;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border-bottom: 1px dashed #777;
+  }
+  .transaction-print.inward-label h2 {
+    font-size: 22px;
+  }
+  .transaction-print.inward-label dt {
+    font-size: 9px;
+  }
+  .transaction-print.inward-label dd {
+    font-size: 12px;
   }
 }
 
@@ -880,6 +937,21 @@ th {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
+}
+.column-filters th {
+  padding: 7px 8px 10px;
+  background: #f7faf9;
+}
+.column-filters input {
+  width: 100%;
+  min-width: 85px;
+  padding: 7px 8px;
+  border: 1px solid #cedbd7;
+  border-radius: 7px;
+  background: white;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: normal;
 }
 td {
   padding: 14px 15px;

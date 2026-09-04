@@ -4,15 +4,19 @@ import { api } from "../../api.js";
 import Field from "../../components/common/Field.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 
-export default function LoginPage() {
+export default function LoginPage({ initialMode = false }) {
   const { login } = useAuth();
-  const [registerMode, setRegisterMode] = useState(false);
+  const [registerMode, setRegisterMode] = useState(
+    initialMode === true || initialMode === "register",
+  );
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
 
   async function submit(event) {
     event.preventDefault();
     setError("");
+    setSubmitting(true);
 
     try {
       const path = registerMode ? "/auth/register" : "/auth/login";
@@ -24,6 +28,8 @@ export default function LoginPage() {
       login(loginData);
     } catch (requestError) {
       setError(requestError.message);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -72,8 +78,14 @@ export default function LoginPage() {
 
         {error && <div className="error">{error}</div>}
 
-        <button className="primary" type="submit">
-          {registerMode ? "Register" : "Login"}
+        <button className="primary" type="submit" disabled={submitting}>
+          {submitting
+            ? registerMode
+              ? "Register..."
+              : "Login..."
+            : registerMode
+              ? "Register"
+              : "Login"}
         </button>
 
         <button

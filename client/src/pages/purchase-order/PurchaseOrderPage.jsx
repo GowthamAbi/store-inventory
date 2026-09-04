@@ -15,6 +15,7 @@ import {
 
 const emptyPurchaseOrder = {
   poNo: "",
+  vendorName: "",
   itemCode: "",
   brand: "",
   description: "",
@@ -72,8 +73,17 @@ export default function PurchaseOrderPage({ pending, notify }) {
 
   const columns = [
     { key: "poNo", label: "PO no." },
+    { key: "vendorName", label: "Vendor name" },
     { key: "itemCode", label: "Item code" },
     { key: "orderQty", label: "Order qty" },
+    ...(pending
+      ? [{
+          key: "pendingQty",
+          label: "Balance",
+          filterValue: (order) => Math.max(0, Number(order.orderQty) - Number(order.inwardQty || 0)),
+          render: (order) => Math.max(0, Number(order.orderQty) - Number(order.inwardQty || 0)),
+        }]
+      : []),
     {
       key: "deliveryDate",
       label: "Delivery",
@@ -126,7 +136,7 @@ export default function PurchaseOrderPage({ pending, notify }) {
             {Object.keys(emptyPurchaseOrder).map((key) => (
               <Field key={key} label={formatLabel(key)}>
                 <input
-                  required={["poNo", "itemCode", "deliveryDate", "orderQty"].includes(key)}
+                  required={["poNo", "vendorName", "itemCode", "deliveryDate", "orderQty"].includes(key)}
                   type={key.toLowerCase().includes("date") ? "date" : key === "orderQty" ? "number" : "text"}
                   value={form[key] ?? ""}
                   onChange={(event) => setForm({ ...form, [key]: event.target.value })}

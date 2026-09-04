@@ -26,29 +26,72 @@ const labels = [
   ["transactionDate", "Date"],
 ];
 
+function TransactionReceipt({ record }) {
+  const inwardQrLink =
+    record.kind === "INWARD"
+      ? `${window.location.origin}/outward?inwardNo=${encodeURIComponent(record.referenceNo)}`
+      : "";
+
+  return (
+    <section className={`card transaction-print ${record.kind === "INWARD" ? "inward-label" : ""}`}>
+      <header>
+        <div><h2>Accessories Flow</h2><p>{record.kind} Receipt</p></div>
+        <b>{record.referenceNo}</b>
+      </header>
+      <dl>
+        {labels.map(([key, label]) => (
+          <div key={key}>
+            <dt>{label}</dt>
+            <dd>
+              {key === "transactionDate"
+                ? new Date(record[key]).toLocaleString()
+                : record[key] || "—"}
+              {["quantity", "balanceQty"].includes(key) ? ` ${record.unit || ""}` : ""}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {record.kind === "INWARD" && (
+        <div className="receipt-qr">
+          <QRGenerator value={inwardQrLink} size={205} />
+          <div><b>Inward QR Code</b><p>Scan for outward entry: {record.referenceNo}</p></div>
+        </div>
+      )}
+      <footer className="no-print">
+        <button onClick={printTransaction}><Printer /> Print</button>
+        <button className="primary" onClick={() => downloadTransactionPdf(record)}><Download /> Download PDF</button>
+      </footer>
+    </section>
+  );
+}
+
 export default function PrintPage({ notify }) {
   const [referenceNo, setReferenceNo] = useState("");
   const [record, setRecord] = useState(null);
+  const [secondReferenceNo, setSecondReferenceNo] = useState("");
+  const [secondRecord, setSecondRecord] = useState(null);
   const [dcNo, setDcNo] = useState("");
   const [dcReport, setDcReport] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  const inwardQrLink =
-    record?.kind === "INWARD"
-      ? `${window.location.origin}/outward?inwardNo=${encodeURIComponent(record.referenceNo)}`
-      : "";
 
   async function findRecord(event) {
     event.preventDefault();
     if (!referenceNo.trim()) return;
     setLoading(true);
     setRecord(null);
+    setSecondRecord(null);
     try {
-      setRecord(
-        await api(
+      const first = await api(
           `/transactions/reference/${encodeURIComponent(referenceNo.trim())}`,
-        ),
-      );
+        );
+      setRecord(first);
+      if (secondReferenceNo.trim()) {
+        const second = await api(`/transactions/reference/${encodeURIComponent(secondReferenceNo.trim())}`);
+        if (first.kind !== "INWARD" || second.kind !== "INWARD") {
+          throw new Error("Two-label printing supports inward numbers only");
+        }
+        setSecondRecord(second);
+      }
     } catch (error) {
       notify(error.message);
     } finally {
@@ -90,6 +133,11 @@ export default function PrintPage({ notify }) {
               }
               placeholder="INW-... or OUT-..."
             />
+            <input
+              value={secondReferenceNo}
+              onChange={(event) => setSecondReferenceNo(event.target.value.toUpperCase())}
+              placeholder="Second inward no. (optional)"
+            />
             <button className="primary" disabled={loading}>
               <Search /> View
             </button>
@@ -110,59 +158,10 @@ export default function PrintPage({ notify }) {
         </div>
       </section>
 
-      {record && (
-        <section className="card transaction-print" id="transaction-print">
-          <header>
-            <div>
-              <h2>Accessories Flow</h2>
-              <p>{record.kind} Receipt</p>
-            </div>
-            <b>{record.referenceNo}</b>
-          </header>
-          <dl>
-            {labels.map(([key, label]) => (
-              <div key={key}>
-                <dt>{label}</dt>
-                <dd>
-                  {key === "transactionDate"
-                    ? new Date(record[key]).toLocaleString()
-                    : record[key] || "—"}
-                  {["quantity", "balanceQty"].includes(key)
-                    ? ` ${record.unit || ""}`
-                    : ""}
-                </dd>
-              </div>
-            ))}
-          </dl>
-          {record.kind === "INWARD" && (
-            <div className="receipt-qr">
-              <QRGenerator value={inwardQrLink} size={190} />
-              <div>
-                <b>Inward QR Code</b>
-                <p>
-                  Scan this QR to open the outward entry for{" "}
-                  {record.referenceNo}.
-                </p>
-                <small>
-                  This regenerated QR can be used if the original inward label
-                  is missing.
-                </small>
-              </div>
-            </div>
-          )}
-          <footer className="no-print">
-            <button onClick={printTransaction}>
-              <Printer /> Print
-            </button>
-            <button
-              className="primary"
-              onClick={() => downloadTransactionPdf(record)}
-            >
-              <Download /> Download PDF
-            </button>
-          </footer>
-        </section>
-      )}
+      {record && <div className="transaction-print-sheet" id="transaction-print">
+        <TransactionReceipt record={record} />
+        {secondRecord && <TransactionReceipt record={secondRecord} />}
+      </div>}
 
       {dcReport && (
         <section className="card dc-print" id="dc-print">
@@ -190,6 +189,7 @@ export default function PrintPage({ notify }) {
                   <th>Inward No.</th>
                   <th>Item Description</th>
                   <th>Item Code</th>
+                  <th className="center-cell">Colour</th>
                   <th>Quantity</th>
                 </tr>
               </thead>
@@ -201,6 +201,7 @@ export default function PrintPage({ notify }) {
                     <td>{entry.inwardReference || "—"}</td>
                     <td>{entry.description}</td>
                     <td>{entry.itemCode}</td>
+                    <td className="center-cell">{entry.colour || "—"}</td>
                     <td>
                       {entry.quantity} {entry.unit}
                     </td>
@@ -209,7 +210,7 @@ export default function PrintPage({ notify }) {
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan="5">Total Quantity</td>
+                  <td colSpan="6">Total Quantity</td>
                   <td>{dcReport.totalQuantity}</td>
                 </tr>
               </tfoot>

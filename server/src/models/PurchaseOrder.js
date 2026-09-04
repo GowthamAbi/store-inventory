@@ -9,6 +9,7 @@ const purchaseOrderSchema = new mongoose.Schema(
       uppercase: true,
       trim: true,
     },
+    vendorName: { type: String, default: "", trim: true },
     itemCode: { type: String, required: true, uppercase: true },
     brand: { type: String, default: "" },
     description: { type: String, default: "" },

@@ -10,7 +10,7 @@ import { requireAuth } from "../middleware/authMiddleware.js";
 const router = Router();
 
 router.get("/health", (_request, response) => {
-  response.json({ success: true, service: "YarnFlow API" });
+  response.json({ success: true, service: "Accessories Flow API" });
 });
 
 router.use("/auth", authRoutes);
