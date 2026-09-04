@@ -7,14 +7,20 @@ import { formatDate } from "../../utils/formatters.js";
 
 export default function HistoryPage() {
   const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ kind: "", from: "", to: "" });
 
-  function loadTransactions() {
+  async function loadTransactions() {
     const query = new URLSearchParams(
       Object.entries(filter).filter(([, value]) => value),
     );
 
-    api(`/transactions?${query.toString()}`).then(setTransactions);
+    setLoading(true);
+    try {
+      setTransactions(await api(`/transactions?${query.toString()}`));
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(loadTransactions, []);
@@ -78,7 +84,7 @@ export default function HistoryPage() {
           </button>
         </div>
 
-        <DataTable columns={columns} rows={transactions} />
+        <DataTable columns={columns} rows={transactions} loading={loading} />
       </Card>
     </>
   );

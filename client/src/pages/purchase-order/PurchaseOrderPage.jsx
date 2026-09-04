@@ -32,11 +32,17 @@ const emptyPurchaseOrder = {
 
 export default function PurchaseOrderPage({ pending, notify }) {
   const [purchaseOrders, setPurchaseOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [editingOrder, setEditingOrder] = useState(null);
   const [form, setForm] = useState(emptyPurchaseOrder);
 
-  function loadPurchaseOrders() {
-    api(`/pos${pending ? "?pending=true" : ""}`).then(setPurchaseOrders);
+  async function loadPurchaseOrders() {
+    setLoading(true);
+    try {
+      setPurchaseOrders(await api(`/pos${pending ? "?pending=true" : ""}`));
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(loadPurchaseOrders, [pending]);
@@ -122,6 +128,7 @@ export default function PurchaseOrderPage({ pending, notify }) {
         <DataTable
           columns={columns}
           rows={purchaseOrders}
+          loading={loading}
           onEdit={pending ? null : openEdit}
           onDelete={pending ? null : deletePurchaseOrder}
         />

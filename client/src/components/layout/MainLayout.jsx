@@ -40,14 +40,14 @@ export default function MainLayout({ page, onPageChange, children }) {
     <div className="app-shell">
       <aside className={menuOpen ? "open" : ""}>
         <div className="brand">
-          <span>
+          <span className="brand-icon">
             <Sparkles />
           </span>
-          <div>
-            <b>Accessories Flow</b>
-            <small>ACCESSORIES MANAGER</small>
+          <div className="brand-copy">
+            <b className="brand-title">Accessories Flow</b>
+            <small className="brand-subtitle">ACCESSORIES MANAGER</small>
           </div>
-          <button onClick={() => setMenuOpen(false)}>
+          <button className="brand-close" onClick={() => setMenuOpen(false)}>
             <X />
           </button>
         </div>

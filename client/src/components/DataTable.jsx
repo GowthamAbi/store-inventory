@@ -6,6 +6,7 @@ export default function DataTable({
   onEdit,
   onDelete,
   empty = "No records found",
+  loading = false,
 }) {
   const [columnFilters, setColumnFilters] = useState({});
   const [openFilter, setOpenFilter] = useState("");
@@ -61,7 +62,17 @@ export default function DataTable({
           </tr>
         </thead>
         <tbody>
-          {filteredRows.length ? (
+          {loading ? (
+            <tr>
+              <td
+                className="table-loading"
+                colSpan={columns.length + (onEdit || onDelete ? 1 : 0)}
+              >
+                <span className="table-loading-spinner" />
+                <b>Loading data...</b>
+              </td>
+            </tr>
+          ) : filteredRows.length ? (
             filteredRows.map((row) => (
               <tr key={row._id || row.referenceNo || row.itemCode}>
                 {columns.map((column) => (

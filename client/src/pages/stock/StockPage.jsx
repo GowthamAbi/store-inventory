@@ -6,10 +6,19 @@ import PageTitle from "../../components/common/PageTitle.jsx";
 
 export default function StockPage() {
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    api("/items").then(setItems);
+    async function loadItems() {
+      setLoading(true);
+      try {
+        setItems(await api("/items"));
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadItems();
   }, []);
 
   const filteredItems = items.filter((item) => {
@@ -61,7 +70,7 @@ export default function StockPage() {
         action={action}
       />
       <Card>
-        <DataTable columns={columns} rows={filteredItems} />
+        <DataTable columns={columns} rows={filteredItems} loading={loading} />
       </Card>
     </>
   );

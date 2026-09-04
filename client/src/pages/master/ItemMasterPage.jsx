@@ -22,11 +22,17 @@ const emptyItem = {
 
 export default function ItemMasterPage({ notify }) {
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState(null);
   const [form, setForm] = useState(emptyItem);
 
-  function loadItems() {
-    api("/items").then(setItems);
+  async function loadItems() {
+    setLoading(true);
+    try {
+      setItems(await api("/items"));
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(loadItems, []);
@@ -89,6 +95,7 @@ export default function ItemMasterPage({ notify }) {
         <DataTable
           columns={columns}
           rows={items}
+          loading={loading}
           onEdit={openEditItem}
           onDelete={deleteItem}
         />

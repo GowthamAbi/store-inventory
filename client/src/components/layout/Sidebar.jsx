@@ -29,14 +29,14 @@ export default function Sidebar({ page, open, onSelect, onClose }) {
   return (
     <aside className={open ? "open" : ""}>
       <div className="brand">
-        <span>
+        <span className="brand-icon">
           <Sparkles />
         </span>
-        <div>
-          <b>Accessories Flow</b>
-          <small>ACCESSORIES MANAGER</small>
+        <div className="brand-copy">
+          <b className="brand-title">Accessories Flow</b>
+          <small className="brand-subtitle">ACCESSORIES MANAGER</small>
         </div>
-        <button onClick={onClose}>
+        <button className="brand-close" onClick={onClose}>
           <X />
         </button>
       </div>
