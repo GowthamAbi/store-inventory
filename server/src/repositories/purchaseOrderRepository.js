@@ -4,8 +4,11 @@ export const purchaseOrderRepository = {
   findAll: (filter = {}) =>
     PurchaseOrder.find(filter).sort({ deliveryDate: 1 }),
 
-  findByNumber: (poNo, session = null) =>
-    PurchaseOrder.findOne({ poNo }).session(session),
+  findByNumberAndItem: (poNo, itemCode, session = null) =>
+    PurchaseOrder.findOne({
+      poNo: poNo.trim().toUpperCase(),
+      itemCode: itemCode.trim().toUpperCase(),
+    }).session(session),
 
   create: (purchaseOrderData) => PurchaseOrder.create(purchaseOrderData),
 

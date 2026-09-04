@@ -13,7 +13,7 @@ export default function StockPage() {
     async function loadItems() {
       setLoading(true);
       try {
-        setItems(await api("/items"));
+        setItems(await api("/items/stock-lots"));
       } finally {
         setLoading(false);
       }
@@ -22,31 +22,21 @@ export default function StockPage() {
   }, []);
 
   const filteredItems = items.filter((item) => {
-    const searchableText = `${item.itemCode} ${item.description} ${item.category}`;
+    const searchableText = `${item.poNo} ${item.indentNo} ${item.inwardNo} ${item.itemCode} ${item.description}`;
     return searchableText.toLowerCase().includes(search.toLowerCase());
   });
 
   const columns = [
+    { key: "poNo", label: "PO no." },
+    { key: "indentNo", label: "Indent no." },
+    { key: "inwardNo", label: "Inward no." },
     { key: "itemCode", label: "Item code" },
     { key: "description", label: "Description" },
-    { key: "category", label: "Category" },
     { key: "brand", label: "Brand" },
+    { key: "type", label: "Type" },
+    { key: "colour", label: "Colour" },
     { key: "stockQty", label: "Balance" },
     { key: "unit", label: "Unit" },
-    { key: "minimumQty", label: "Minimum" },
-    {
-      key: "health",
-      label: "Health",
-      render: (item) => (
-        <span
-          className={
-            item.stockQty < item.minimumQty ? "pill red" : "pill green"
-          }
-        >
-          {item.stockQty < item.minimumQty ? "Reorder" : "Healthy"}
-        </span>
-      ),
-    },
   ];
 
   const action = (

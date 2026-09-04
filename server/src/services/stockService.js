@@ -16,13 +16,20 @@ export async function createInward(inwardData) {
     await session.withTransaction(async () => {
       let purchaseOrder = null;
 
-      if (inwardData.poNo) {
-        purchaseOrder = await purchaseOrderRepository.findByNumber(
+      if (inwardData.poNo && inwardData.itemCode) {
+        purchaseOrder = await purchaseOrderRepository.findByNumberAndItem(
           inwardData.poNo,
+          inwardData.itemCode,
           session,
         );
 
-        if (!purchaseOrder) throw new ApiError(404, "Purchase order not found");
+        if (!purchaseOrder) {
+          throw new ApiError(404, "PO No. and Item Code combination not found");
+        }
+      }
+
+      if (!purchaseOrder) {
+        throw new ApiError(400, "PO No. and Item Code are required for inward");
       }
 
       let item = await itemRepository.findByCode(inwardData.itemCode, session);
@@ -53,6 +60,10 @@ export async function createInward(inwardData) {
       await item.save({ session });
 
       if (purchaseOrder) {
+        const pendingQty = purchaseOrder.orderQty - purchaseOrder.inwardQty;
+        if (Number(inwardData.quantity) > pendingQty) {
+          throw new ApiError(400, `Only ${pendingQty} quantity pending in this PO item`);
+        }
         purchaseOrder.inwardQty += Number(inwardData.quantity);
         purchaseOrder.status =
           purchaseOrder.inwardQty >= purchaseOrder.orderQty
@@ -67,6 +78,7 @@ export async function createInward(inwardData) {
       const transaction = await transactionRepository.create(
         {
           ...inwardData,
+          indentNo: purchaseOrder.indentNo || "",
           referenceNo: inwardNumber,
           kind: "INWARD",
           balanceQty: item.stockQty,
@@ -80,6 +92,7 @@ export async function createInward(inwardData) {
             inwardNo: inwardNumber,
             itemCode: item.itemCode,
             poNo: inwardData.poNo,
+            indentNo: purchaseOrder.indentNo || "",
             quantity: Number(inwardData.quantity),
             balanceQty: Number(inwardData.quantity),
             inwardDate: inwardData.transactionDate,

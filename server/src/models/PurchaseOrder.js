@@ -5,7 +5,6 @@ const purchaseOrderSchema = new mongoose.Schema(
     poNo: {
       type: String,
       required: true,
-      unique: true,
       uppercase: true,
       trim: true,
     },
@@ -31,6 +30,9 @@ const purchaseOrderSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+// One PO can contain many items, but the same item cannot repeat in that PO.
+purchaseOrderSchema.index({ poNo: 1, itemCode: 1 }, { unique: true });
 
 purchaseOrderSchema.virtual("pendingQty").get(function () {
   return Math.max(0, this.orderQty - this.inwardQty);

@@ -81,6 +81,7 @@ export default function PurchaseOrderPage({ pending, notify }) {
 
   const columns = [
     { key: "poNo", label: "PO no." },
+    { key: "indentNo", label: "Indent no." },
     { key: "vendorName", label: "Vendor name" },
     { key: "itemCode", label: "Item code" },
     { key: "orderQty", label: "Order qty" },

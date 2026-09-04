@@ -12,6 +12,7 @@ export const purchaseOrderService = {
   },
 
   createPurchaseOrder: async (purchaseOrderData) => {
+    const poNo = purchaseOrderData.poNo.trim().toUpperCase();
     const itemCode = purchaseOrderData.itemCode.trim().toUpperCase();
     let item = await Item.findOne({ itemCode });
 
@@ -27,7 +28,7 @@ export const purchaseOrderService = {
       });
     }
 
-    return purchaseOrderRepository.create({ ...purchaseOrderData, itemCode });
+    return purchaseOrderRepository.create({ ...purchaseOrderData, poNo, itemCode });
   },
 
   updatePurchaseOrder: async (purchaseOrderId, purchaseOrderData) => {

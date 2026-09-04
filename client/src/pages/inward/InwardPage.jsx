@@ -11,6 +11,7 @@ function createBlankRow() {
   return {
     itemCode: "",
     poNo: "",
+    indentNo: "",
     brand: "",
     description: "",
     type: "",
@@ -41,8 +42,9 @@ export default function InwardPage({ notify }) {
 
   async function loadItemAndPO(rowIndex) {
     const itemCode = rows[rowIndex].itemCode.trim().toUpperCase();
+    const poNo = rows[rowIndex].poNo.trim().toUpperCase();
 
-    if (!itemCode) return;
+    if (!poNo || !itemCode) return;
     updateRow(rowIndex, { loading: true, error: "" });
 
     try {
@@ -50,12 +52,13 @@ export default function InwardPage({ notify }) {
 
       const matchingPO = purchaseOrders.find(
         (purchaseOrder) =>
+          purchaseOrder.poNo === poNo &&
           purchaseOrder.itemCode === itemCode &&
           purchaseOrder.status !== "Completed",
       );
 
       if (!matchingPO) {
-        throw new Error("No pending PO found for this item code");
+        throw new Error("No pending order found for this PO No. and Item Code");
       }
 
       let item = null;
@@ -68,7 +71,8 @@ export default function InwardPage({ notify }) {
 
       updateRow(rowIndex, {
         itemCode,
-        poNo: matchingPO.poNo,
+        poNo,
+        indentNo: matchingPO.indentNo || "",
         brand: item?.brand || matchingPO.brand || "",
         description:
           item?.description || matchingPO.description || matchingPO.itemCode,
@@ -107,11 +111,11 @@ export default function InwardPage({ notify }) {
 
   async function submitInward() {
     const invalidRow = rows.find(
-      (row) => !row.itemCode || !row.inwardQty || Number(row.inwardQty) <= 0,
+      (row) => !row.poNo || !row.itemCode || !row.inwardQty || Number(row.inwardQty) <= 0,
     );
 
     if (invalidRow) {
-      notify("Item code and valid inward quantity are required");
+      notify("PO No., Item Code and valid Inward Qty are required");
       return;
     }
 
@@ -124,6 +128,7 @@ export default function InwardPage({ notify }) {
         const saved = await createInward({
           itemCode: row.itemCode,
           poNo: row.poNo,
+          indentNo: row.indentNo,
           quantity: Number(row.inwardQty),
           transactionDate: row.inwardDate,
           createdBy: "Store User",
@@ -171,7 +176,7 @@ export default function InwardPage({ notify }) {
     <>
       <PageTitle
         title="Inward"
-        subtitle="Enter item code to load master and pending PO details automatically"
+        subtitle="Enter PO No. and Item Code to load the exact pending order details"
       />
 
       <section className="card inward-card">
@@ -180,6 +185,7 @@ export default function InwardPage({ notify }) {
             <thead>
               <tr>
                 <th>Inward No.</th>
+                <th>PO No.</th>
                 <th>Item Code</th>
                 <th>Brand</th>
                 <th>Item Description</th>
@@ -201,11 +207,30 @@ export default function InwardPage({ notify }) {
                   </td>
                   <td>
                     <input
+                      className="table-input"
+                      value={row.poNo}
+                      placeholder="PO-001"
+                      onChange={(event) =>
+                        updateRow(rowIndex, {
+                          poNo: event.target.value.toUpperCase(),
+                          orderQty: 0,
+                          balanceQty: 0,
+                        })
+                      }
+                      onBlur={() => loadItemAndPO(rowIndex)}
+                    />
+                  </td>
+                  <td>
+                    <input
                       className="table-input item-code-input"
                       value={row.itemCode}
                       placeholder="ITEM-001"
                       onChange={(event) =>
-                        updateRow(rowIndex, { itemCode: event.target.value })
+                        updateRow(rowIndex, {
+                          itemCode: event.target.value.toUpperCase(),
+                          orderQty: 0,
+                          balanceQty: 0,
+                        })
                       }
                       onBlur={() => loadItemAndPO(rowIndex)}
                       onKeyDown={(event) => {
@@ -319,6 +344,10 @@ export default function InwardPage({ notify }) {
               <div>
                 <dt>PO No.</dt>
                 <dd>{selectedInward.poNo || "—"}</dd>
+              </div>
+              <div>
+                <dt>Indent No.</dt>
+                <dd>{selectedInward.indentNo || "—"}</dd>
               </div>
               <div>
                 <dt>Description</dt>

@@ -7,6 +7,7 @@ function rowsFor(record) {
     ["Transaction", record.kind || "OUTWARD"],
     ["Inward Reference", record.inwardReference || record.inwardNo || "-"],
     ["PO No", record.poNo || "-"],
+    ["Indent No", record.indentNo || "-"],
     ["Item Code", record.itemCode || "-"],
     ["Item Name / Usage", record.itemName || record.description || "-"],
     ["Brand", record.brand || "-"],

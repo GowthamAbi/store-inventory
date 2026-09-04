@@ -8,6 +8,7 @@ const transactionSchema = new mongoose.Schema(
     itemCode: { type: String, required: true, uppercase: true },
     itemName: { type: String, default: "" },
     poNo: { type: String, default: "" },
+    indentNo: { type: String, default: "" },
     dcNo: { type: String, default: "" },
     section: { type: String, default: "" },
     quantity: { type: Number, required: true, min: 0.001 },

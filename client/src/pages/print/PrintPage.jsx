@@ -14,6 +14,7 @@ const labels = [
   ["kind", "Transaction"],
   ["inwardReference", "Inward Reference"],
   ["poNo", "PO No."],
+  ["indentNo", "Indent No."],
   ["itemCode", "Item Code"],
   ["itemName", "Item Name / Usage"],
   ["brand", "Brand"],
