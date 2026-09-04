@@ -21,7 +21,6 @@ export default function PublicOutwardPage({ inwardNo }) {
     getPublicInward(inwardNo)
       .then((data) => {
         setInward(data);
-        setForm((current) => ({ ...current, itemName: data.description || "" }));
         setStatus((current) => ({ ...current, loading: false }));
       })
       .catch((error) =>
@@ -74,7 +73,11 @@ export default function PublicOutwardPage({ inwardNo }) {
         availableQty: result.availableQty,
       }));
       setReceipt(result);
-      setForm((current) => ({ ...current, wantedMtr: "" }));
+      setForm((current) => ({
+        ...current,
+        itemName: "",
+        wantedMtr: "",
+      }));
       setStatus({
         loading: false,
         saving: false,
@@ -122,7 +125,7 @@ export default function PublicOutwardPage({ inwardNo }) {
               <dd>{inward.itemCode}</dd>
             </div>
             <div>
-              <dt>Item Name</dt>
+              <dt>Item Description</dt>
               <dd>{inward.description}</dd>
             </div>
             <div>
@@ -168,7 +171,14 @@ export default function PublicOutwardPage({ inwardNo }) {
           </label>
           <label>
             <span>Item Name</span>
-            <input name="itemName" value={form.itemName} onChange={updateField} placeholder="Enter item usage name" />
+            <input
+              name="itemName"
+              required
+              autoComplete="off"
+              value={form.itemName}
+              onChange={updateField}
+              placeholder="Enter item name manually"
+            />
           </label>
           <label>
             <span>Section Name / Issued To</span>
