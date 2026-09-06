@@ -7,7 +7,9 @@ import AppRoutes from "./routes/AppRoutes.jsx";
 
 function Application() {
   const { token } = useAuth();
-  const [page, setPage] = useState("Dashboard");
+  const [page, setPage] = useState(
+    window.location.pathname === "/production" ? "Production Control" : "Dashboard",
+  );
   const [message, setMessage] = useState("");
 
   function notify(text) {

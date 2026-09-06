@@ -10,6 +10,11 @@ import {
   Settings2,
   ShoppingCart,
   Printer,
+  Activity,
+  Factory,
+  Wrench,
+  Scissors,
+  Users,
   Sparkles,
   X,
 } from "lucide-react";
@@ -17,14 +22,20 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 
 const navigation = [
-  ["Dashboard", LayoutDashboard],
-  ["Inward", ArrowDownToLine],
-  ["PO", ShoppingCart],
-  ["PO Pending", Clock3],
-  ["Print", Printer],
-  ["Stock", Boxes],
-  ["History", FileClock],
-  ["Master Data", Settings2],
+  ["Dashboard", LayoutDashboard, ["admin", "store", "production"]],
+  ["Inward", ArrowDownToLine, ["admin", "store"]],
+  ["PO", ShoppingCart, ["admin", "store"]],
+  ["PO Pending", Clock3, ["admin", "store"]],
+  ["Print", Printer, ["admin", "store"]],
+  ["Stock", Boxes, ["admin", "store"]],
+  ["History", FileClock, ["admin", "store"]],
+  ["Master Data", Settings2, ["admin", "store"]],
+  ["Production Control", Activity, ["admin", "production"]],
+  ["Production Dashboard", LayoutDashboard, ["admin"]],
+  ["Machine & Employee", Factory, ["admin", "production"]],
+  ["Pending & Issues", Wrench, ["admin", "production"]],
+  ["Sewing Delivery", Scissors, ["admin", "production"]],
+  ["User Management", Users, ["admin"]],
 ];
 
 export default function MainLayout({ page, onPageChange, children }) {
@@ -53,7 +64,7 @@ export default function MainLayout({ page, onPageChange, children }) {
         </div>
 
         <nav>
-          {navigation.map(([name, Icon]) => (
+          {navigation.filter(([, , roles]) => roles.includes(user?.role)).map(([name, Icon]) => (
             <button
               className={page === name ? "active" : ""}
               key={name}
@@ -84,7 +95,7 @@ export default function MainLayout({ page, onPageChange, children }) {
             <Menu />
           </button>
           <div>
-            <small>Accessories Store</small>
+            <small>{user?.role === "production" ? "Elastic Production" : "Accessories Store"}</small>
             <h1>{page}</h1>
           </div>
         </header>

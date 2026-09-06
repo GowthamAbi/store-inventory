@@ -1,1 +1,5 @@
-export const ROLES = { ADMIN: "admin", STORE: "store" };
+export const ROLES = {
+  ADMIN: "admin",
+  STORE: "store",
+  PRODUCTION: "production",
+};

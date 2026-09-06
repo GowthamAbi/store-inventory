@@ -1,0 +1,32 @@
+import { useEffect, useState } from "react";
+import { api } from "../../api.js";
+import DataTable from "../../components/DataTable.jsx";
+import Card from "../../components/common/Card.jsx";
+import PageTitle from "../../components/common/PageTitle.jsx";
+
+const blank = { name: "", email: "", password: "", role: "store" };
+
+export default function UserManagementPage({ notify }) {
+  const [users, setUsers] = useState([]);
+  const [form, setForm] = useState(blank);
+  async function load() { setUsers(await api("/auth/users")); }
+  useEffect(() => { load(); }, []);
+  async function submit(event) {
+    event.preventDefault();
+    await api("/auth/users", { method: "POST", body: JSON.stringify(form) });
+    setForm(blank);
+    await load();
+    notify("User account created");
+  }
+  return <>
+    <PageTitle title="User Management" subtitle="One admin with Store and Production users" />
+    <Card title="Create User"><form className="production-start-grid" onSubmit={submit}>
+      <label><span>Name</span><input required value={form.name} onChange={(event)=>setForm({...form,name:event.target.value})}/></label>
+      <label><span>Email</span><input type="email" required value={form.email} onChange={(event)=>setForm({...form,email:event.target.value})}/></label>
+      <label><span>Temporary Password</span><input type="password" minLength="6" required value={form.password} onChange={(event)=>setForm({...form,password:event.target.value})}/></label>
+      <label><span>Role</span><select value={form.role} onChange={(event)=>setForm({...form,role:event.target.value})}><option value="store">Store User</option><option value="production">Production User</option></select></label>
+      <button className="primary">Create User</button>
+    </form></Card>
+    <Card title="Accounts"><DataTable rows={users} columns={[{key:"name",label:"Name"},{key:"email",label:"Email"},{key:"role",label:"Role"},{key:"createdAt",label:"Created",render:(row)=>new Date(row.createdAt).toLocaleDateString()}]}/></Card>
+  </>;
+}

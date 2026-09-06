@@ -10,8 +10,11 @@ export default function LoginPage({ initialMode = false }) {
     initialMode === true || initialMode === "register",
   );
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const resetToken = new URLSearchParams(window.location.search).get("resetToken");
+  const [forgotMode, setForgotMode] = useState(Boolean(resetToken));
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "store" });
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   async function submit(event) {
     event.preventDefault();
@@ -33,6 +36,48 @@ export default function LoginPage({ initialMode = false }) {
     }
   }
 
+  async function submitPasswordRequest(event) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+    setSuccess("");
+    try {
+      const data = await api(resetToken ? "/auth/reset-password" : "/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify(resetToken
+          ? { token: resetToken, password: form.password }
+          : { email: form.email }),
+      });
+      setSuccess(data.message);
+      if (resetToken) window.history.replaceState({}, "", "/");
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (forgotMode) {
+    return (
+      <div className="auth">
+        <form onSubmit={submitPasswordRequest}>
+          <div className="auth-logo"><Sparkles /></div>
+          <h1>{resetToken ? "Reset password" : "Forgot password"}</h1>
+          <p>{resetToken ? "Enter your new password" : "Enter your registered email"}</p>
+          {!resetToken ? (
+            <Field label="Email"><input type="email" required value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></Field>
+          ) : (
+            <Field label="New Password"><input type="password" minLength="6" required value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></Field>
+          )}
+          {error && <div className="error">{error}</div>}
+          {success && <div className="success-message">{success}</div>}
+          <button className="primary" disabled={submitting}>{submitting ? "Please wait..." : resetToken ? "Reset Password" : "Send Reset Link"}</button>
+          <button type="button" className="link" onClick={() => setForgotMode(false)}>Back to Login</button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="auth">
       <form onSubmit={submit}>
@@ -40,10 +85,10 @@ export default function LoginPage({ initialMode = false }) {
           <Sparkles />
         </div>
         <h1>Accessories Flow</h1>
-        <p>{registerMode ? "Create store account" : "Sign in to continue"}</p>
+        <p>{registerMode ? "Create the first company administrator" : "Sign in to continue"}</p>
 
         {registerMode && (
-          <Field label="Name">
+          <><Field label="Name">
             <input
               required
               value={form.name}
@@ -51,7 +96,7 @@ export default function LoginPage({ initialMode = false }) {
                 setForm({ ...form, name: event.target.value })
               }
             />
-          </Field>
+          </Field></>
         )}
 
         <Field label="Email">
@@ -95,6 +140,9 @@ export default function LoginPage({ initialMode = false }) {
         >
           {registerMode ? "Already registered? Login" : "New user? Register"}
         </button>
+        {!registerMode && (
+          <button type="button" className="link" onClick={() => setForgotMode(true)}>Forgot Password?</button>
+        )}
       </form>
     </div>
   );

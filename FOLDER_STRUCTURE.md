@@ -115,6 +115,22 @@ Store/
             └── generateReferenceNo.js
 ```
 
+## Added Elastic Production MVC modules
+
+```text
+client/src/pages/production/
+├── ProductionDashboardPage.jsx
+├── ProductionControlPage.jsx
+├── ProductionSetupPage.jsx
+├── PendingPage.jsx
+└── SewingDeliveryPage.jsx
+
+server/src/
+├── models/{Machine,Employee,ProductionJob,PendingIssue,SewingDelivery}.js
+├── controllers/productionController.js
+└── routes/production.routes.js
+```
+
 ## Request flow
 
 ```text

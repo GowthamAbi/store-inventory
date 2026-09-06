@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import PurchaseOrder from "../models/PurchaseOrder.js";
+import User from "../models/User.js";
 
 /** Connect the application to MongoDB Atlas. */
 export async function connectDatabase() {
@@ -13,5 +14,15 @@ export async function connectDatabase() {
   );
   if (oldPoIndex) await PurchaseOrder.collection.dropIndex(oldPoIndex.name);
   await PurchaseOrder.syncIndexes();
+
+  // Upgrade an existing Store-only installation: preserve the oldest account
+  // and make it the single administrator when no admin exists yet.
+  if (!(await User.exists({ role: "admin" }))) {
+    const oldestUser = await User.findOne().sort({ createdAt: 1 });
+    if (oldestUser) {
+      oldestUser.role = "admin";
+      await oldestUser.save();
+    }
+  }
   console.log("MongoDB connected successfully");
 }

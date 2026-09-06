@@ -54,3 +54,18 @@ Backend: `http://localhost:5000`
 - Date/category transaction history
 - CSV export
 - Login and registration using JWT
+
+## Elastic Production SaaS extension
+
+- The first registered account is the single company administrator.
+- Existing installations automatically promote the oldest account when no admin exists.
+- Admin creates separate Store and Production users from User Management.
+- Store Outward creates the Main Production QR.
+- Main Outward, Machine and Employee QR scans are retained as one production draft.
+- Production runs track colour, size, planned/OK/rework/rejection/balance pieces.
+- Machine stops track Complete, Breakdown, Thread, Box, Size and Other changes.
+- Section Pending tracks shortage, elastic rejection, production/rework/sewing holds and material requests.
+- Sewing Delivery splits available OK pieces by sewing unit and delivery person.
+
+For password-reset email, configure `RESEND_API_KEY`, `EMAIL_FROM`, and deployed
+`CLIENT_URL` in Render. Reset links expire after 30 minutes.
