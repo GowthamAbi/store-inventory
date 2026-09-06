@@ -209,6 +209,17 @@
 .dc-print .center-cell {
   text-align: center;
 }
+.dc-row-qr {
+  width: 72px;
+  min-width: 72px;
+  padding: 5px !important;
+}
+.dc-row-qr .qr-image {
+  display: block;
+  width: 58px;
+  height: 58px;
+  margin: auto;
+}
 .dc-print tfoot td {
   font-weight: 800;
 }
@@ -390,6 +401,15 @@
     line-height: 1.2;
     white-space: normal;
     overflow-wrap: anywhere;
+  }
+  .dc-row-qr {
+    width: 48px;
+    min-width: 48px;
+    padding: 2px !important;
+  }
+  .dc-row-qr .qr-image {
+    width: 42px;
+    height: 42px;
   }
   .dc-print .remarks {
     margin-top: 10px;

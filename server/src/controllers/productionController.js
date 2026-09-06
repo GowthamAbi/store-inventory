@@ -139,10 +139,15 @@ export async function startJob(request, response) {
   const itemCodes = [...new Set(dcOutwards.map((entry) => entry.itemCode))];
   const items = await Item.find({ itemCode: { $in: itemCodes } }).lean();
   const itemMap = new Map(items.map((item) => [item.itemCode, item]));
-  const outward = dcOutwards.find((entry) =>
-    normalize(entry.colour || itemMap.get(entry.itemCode)?.colour) === requestedColour,
-  );
+  const outward = requestedOutwardNo
+    ? dcOutwards.find((entry) => normalize(entry.outwardNo) === requestedOutwardNo)
+    : dcOutwards.find((entry) =>
+        normalize(entry.colour || itemMap.get(entry.itemCode)?.colour) === requestedColour,
+      );
   if (!outward) throw new ApiError(404, "Selected colour is not available in this DC");
+  if (requestedColour && normalize(outward.colour || itemMap.get(outward.itemCode)?.colour) !== requestedColour) {
+    throw new ApiError(400, "Scanned outward row and selected colour do not match");
+  }
   const outwardNo = outward.outwardNo;
   const productionDcNo = outward.dcNo;
   const plannedPcs = Number(request.body.plannedPcs);

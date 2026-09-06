@@ -76,11 +76,11 @@ export async function downloadTransactionPdf(record) {
 export async function downloadDcPdf(report) {
   if (!report) return;
   const pdf = new jsPDF({ orientation: "landscape" });
-  const columns = [12, 25, 62, 100, 181, 216, 246];
-  const widths = [10, 34, 35, 76, 30, 27, 36];
+  const columns = [12, 24, 58, 92, 163, 193, 218, 240];
+  const widths = [9, 31, 31, 67, 27, 22, 18, 42];
   const headers = [
     "S.No", "Outward No", "Inward No", "Item Description",
-    "Item Code", "Colour", "Quantity",
+    "Item Code", "Colour", "QR", "Quantity",
   ];
   const colours = [...new Set(report.entries.map((entry) => entry.colour || "UNSPECIFIED"))];
   const qrItems = [{ label: "MAIN DC", colour: "" }, ...colours.map((colour) => ({ label: colour, colour }))];
@@ -114,10 +114,18 @@ export async function downloadDcPdf(report) {
   });
   pdf.text("Size: __________________________", 15, 57);
 
+  const rowQrSize = report.entries.length > 10 ? 5.5 : report.entries.length > 6 ? 7 : 9;
+  const rowQrData = await Promise.all(report.entries.map((entry) => {
+    const url = `${window.location.origin}/production?dcNo=${encodeURIComponent(report.dcNo)}` +
+      `&outwardNo=${encodeURIComponent(entry.referenceNo || "")}` +
+      `&inwardNo=${encodeURIComponent(entry.inwardReference || "")}` +
+      `&colour=${encodeURIComponent(entry.colour || "")}`;
+    return QRCode.toDataURL(url, { width: 240, margin: 1, errorCorrectionLevel: "M" });
+  }));
   const preparedRows = report.entries.map((entry, index) => {
-    const values = [index + 1, entry.referenceNo, entry.inwardReference || "-", entry.description, entry.itemCode, entry.colour || "-", `${entry.quantity} ${entry.unit || ""}`];
+    const values = [index + 1, entry.referenceNo, entry.inwardReference || "-", entry.description, entry.itemCode, entry.colour || "-", "", `${entry.quantity} ${entry.unit || ""}`];
     const wrapped = values.map((value, columnIndex) => pdf.splitTextToSize(String(value), widths[columnIndex]));
-    return { wrapped, lineCount: Math.max(...wrapped.map((lines) => lines.length)) };
+    return { wrapped, lineCount: Math.max(...wrapped.map((lines) => lines.length)), qr: rowQrData[index] };
   });
   const totalLines = preparedRows.reduce((sum, row) => sum + row.lineCount, 0) || 1;
   const rowSpacing = preparedRows.length > 20 ? 0.7 : 1.2;
@@ -129,15 +137,17 @@ export async function downloadDcPdf(report) {
   let y = drawTableHeader(68, tableFontSize);
   pdf.setFontSize(tableFontSize);
 
-  preparedRows.forEach(({ wrapped, lineCount }) => {
-    const rowHeight = lineCount * lineHeight + rowSpacing;
+  preparedRows.forEach(({ wrapped, lineCount, qr }) => {
+    const rowHeight = Math.max(lineCount * lineHeight + rowSpacing, rowQrSize + 1);
     wrapped.forEach((lines, columnIndex) => {
-      const centered = columnIndex === 0 || columnIndex === 5 || columnIndex === 6;
+      if (columnIndex === 6) return;
+      const centered = columnIndex === 0 || columnIndex === 5 || columnIndex === 7;
       pdf.text(lines, centered ? columns[columnIndex] + widths[columnIndex] / 2 : columns[columnIndex], y + lineHeight, {
         lineHeightFactor: 1,
         align: centered ? "center" : "left",
       });
     });
+    pdf.addImage(qr, "PNG", columns[6] + (widths[6] - rowQrSize) / 2, y + (rowHeight - rowQrSize) / 2, rowQrSize, rowQrSize);
     pdf.line(10, y + rowHeight, 287, y + rowHeight);
     y += rowHeight;
   });

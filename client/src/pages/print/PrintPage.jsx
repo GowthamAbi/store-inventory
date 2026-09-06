@@ -74,6 +74,11 @@ export default function PrintPage({ notify }) {
   const [loading, setLoading] = useState(false);
   const productionLink = (colour = "") =>
     `${window.location.origin}/production?dcNo=${encodeURIComponent(dcReport?.dcNo || "")}${colour ? `&colour=${encodeURIComponent(colour)}` : ""}`;
+  const outwardRowLink = (entry) =>
+    `${window.location.origin}/production?dcNo=${encodeURIComponent(dcReport?.dcNo || "")}` +
+    `&outwardNo=${encodeURIComponent(entry.referenceNo || "")}` +
+    `&inwardNo=${encodeURIComponent(entry.inwardReference || "")}` +
+    `&colour=${encodeURIComponent(entry.colour || "")}`;
 
   async function findRecord(event) {
     event.preventDefault();
@@ -177,6 +182,7 @@ export default function PrintPage({ notify }) {
                   <th>Item Description</th>
                   <th>Item Code</th>
                   <th className="center-cell">Colour</th>
+                  <th className="center-cell">QR</th>
                   <th>Quantity</th>
                 </tr>
               </thead>
@@ -189,6 +195,9 @@ export default function PrintPage({ notify }) {
                     <td>{entry.description}</td>
                     <td>{entry.itemCode}</td>
                     <td className="center-cell">{entry.colour || "—"}</td>
+                    <td className="center-cell dc-row-qr">
+                      <QRGenerator value={outwardRowLink(entry)} size={58} />
+                    </td>
                     <td>
                       {entry.quantity} {entry.unit}
                     </td>
@@ -197,7 +206,7 @@ export default function PrintPage({ notify }) {
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan="6">Total Quantity</td>
+                  <td colSpan="7">Total Quantity</td>
                   <td>{dcReport.totalQuantity}</td>
                 </tr>
               </tfoot>

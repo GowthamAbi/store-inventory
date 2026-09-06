@@ -5,7 +5,7 @@ import Card from "../../components/common/Card.jsx";
 import PageTitle from "../../components/common/PageTitle.jsx";
 import QRGenerator from "../../components/qr/QRGenerator.jsx";
 
-const blankStart = { dcNo: "", machineCode: "", employeeCode: "", section: "Elastic Production", colour: "", size: "", plannedPcs: "" };
+const blankStart = { dcNo: "", outwardNo: "", inwardNo: "", machineCode: "", employeeCode: "", section: "Elastic Production", colour: "", size: "", plannedPcs: "" };
 const DRAFT_KEY = "elastic_production_scan_draft";
 
 function initialScanForm() {
@@ -14,7 +14,7 @@ function initialScanForm() {
   return {
     ...blankStart,
     ...saved,
-    ...Object.fromEntries(["dcNo", "machineCode", "employeeCode", "colour", "size"].filter((key) => params.get(key)).map((key) => [key, params.get(key)])),
+    ...Object.fromEntries(["dcNo", "outwardNo", "inwardNo", "machineCode", "employeeCode", "colour", "size"].filter((key) => params.get(key)).map((key) => [key, params.get(key)])),
   };
 }
 const blankStop = { action: "Complete", okPcs: "", reworkPcs: "", rejectionPcs: "", reason: "" };
@@ -61,7 +61,7 @@ export default function ProductionControlPage({ notify }) {
     </Card>
     {scannedMachineJob && <div className="scan-result-card"><b>{scannedMachineJob.machineCode} is {scannedMachineJob.status}</b><span>{scannedMachineJob.colour} · Size {scannedMachineJob.size} · Balance {scannedMachineJob.balancePcs} pcs</span>{scannedMachineJob.status === "Running" ? <button className="danger" onClick={() => setSelectedJob(scannedMachineJob)}>Stop Machine</button> : <button onClick={() => resume(scannedMachineJob)}>Complete Change / Resume</button>}</div>}
     <Card title="Start Production">
-      <form className="production-start-grid" onSubmit={start}>{Object.keys(blankStart).filter(key=>key!=="dcNo").map((key) => <label key={key}><span>{key}</span>{key === "colour" && dcPlan ? <select required value={startForm.colour} onChange={(event)=>setStartForm({...startForm,colour:event.target.value})}><option value="">Select DC Colour</option>{dcPlan.colours.map(colour=><option key={colour}>{colour}</option>)}</select> : <input required value={startForm[key]} type={key === "plannedPcs" ? "number" : "text"} placeholder={key.includes("Code") ? "Scan or enter QR code" : ""} onChange={(event) => setStartForm({ ...startForm, [key]: event.target.value })} />}</label>)}<button className="primary">Start Production</button></form>
+      <form className="production-start-grid" onSubmit={start}>{Object.keys(blankStart).filter(key=>!["dcNo","inwardNo"].includes(key)).map((key) => <label key={key}><span>{key}</span>{key === "colour" && dcPlan ? <select required value={startForm.colour} onChange={(event)=>setStartForm({...startForm,colour:event.target.value})}><option value="">Select DC Colour</option>{dcPlan.colours.map(colour=><option key={colour}>{colour}</option>)}</select> : <input required={!['outwardNo'].includes(key)} readOnly={key === "outwardNo" && Boolean(startForm.outwardNo)} value={startForm[key]} type={key === "plannedPcs" ? "number" : "text"} placeholder={key.includes("Code") ? "Scan or enter QR code" : ""} onChange={(event) => setStartForm({ ...startForm, [key]: event.target.value })} />}</label>)}{startForm.inwardNo && <div className="scan-reference"><b>Source Inward</b><span>{startForm.inwardNo}</span></div>}<button className="primary">Start Production</button></form>
     </Card>
     {selectedJob && <Card title={`Stop ${selectedJob.jobNo}`}><form className="production-start-grid" onSubmit={stop}>
       <label><span>Stop Option</span><select value={stopForm.action} onChange={(event) => setStopForm({ ...stopForm, action: event.target.value })}>{["Complete","Breakdown","Thread Change","Box Change","Size Change","Other Change"].map((value) => <option key={value}>{value}</option>)}</select></label>
