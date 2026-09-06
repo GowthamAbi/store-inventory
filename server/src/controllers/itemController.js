@@ -1,6 +1,5 @@
 import { itemService } from "../services/itemService.js";
 import Inward from "../models/Inward.js";
-import Item from "../models/Item.js";
 
 export async function getItems(_request, response) {
   response.json(await itemService.getItems());
@@ -10,25 +9,20 @@ export async function getStockLots(_request, response) {
   const inwards = await Inward.find({ balanceQty: { $gt: 0 } })
     .sort({ inwardDate: -1 })
     .lean();
-  const itemCodes = [...new Set(inwards.map((entry) => entry.itemCode))];
-  const items = await Item.find({ itemCode: { $in: itemCodes } }).lean();
-  const itemMap = new Map(items.map((item) => [item.itemCode, item]));
-
   response.json(
     inwards.map((inward) => {
-      const item = itemMap.get(inward.itemCode) || {};
       return {
         _id: inward._id,
         inwardNo: inward.inwardNo,
         poNo: inward.poNo || "",
         indentNo: inward.indentNo || "",
         itemCode: inward.itemCode,
-        description: item.description || inward.itemCode,
-        brand: item.brand || "",
-        type: item.type || "",
-        colour: item.colour || "",
+        description: inward.description || inward.itemCode,
+        brand: inward.brand || "",
+        type: inward.type || "",
+        colour: inward.colour || "",
         stockQty: inward.balanceQty,
-        unit: item.unit || "",
+        unit: inward.unit || "MTR",
         inwardDate: inward.inwardDate,
       };
     }),

@@ -19,6 +19,12 @@ Readable MERN project with separate `client` and `server` folders.
   that previously caused a DC print 404.
 - Inward lots retain brand, description, type, colour and unit for traceability.
 - Mobile outward completion shows a confirmation popup and next-inward scan entry.
+- Item Master supports separate colour variants for the same Item Code.
+- Existing and pending PO lines automatically create/update their matching
+  Item Code + Colour master variant when the server starts.
+- Inward brand, description, type, colour and unit always come from the exact
+  PO No. + Item Code (+ Indent No.) line; existing mismatched inward snapshots
+  are corrected automatically and colour-wise stock is recalculated.
 
 The first registration creates the initial company, factory and SaaS Super Admin.
 Existing single-company data is attached to a default company during startup.
