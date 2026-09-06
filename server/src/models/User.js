@@ -13,9 +13,16 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ["admin", "store", "production"],
+      enum: [
+        "saas_super_admin", "company_admin", "admin", "store",
+        "production_planner", "production_operator", "production",
+        "supervisor", "quality", "maintenance", "sewing_coordinator",
+        "management", "view_only",
+      ],
       default: "store",
     },
+    permissions: [{ type: String }],
+    active: { type: Boolean, default: true },
     resetPasswordToken: { type: String, default: "" },
     resetPasswordExpires: Date,
   },

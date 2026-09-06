@@ -5,8 +5,8 @@ import Card from "../../components/common/Card.jsx";
 import PageTitle from "../../components/common/PageTitle.jsx";
 import QRGenerator from "../../components/qr/QRGenerator.jsx";
 
-const emptyMachine = { machineCode: "", machineName: "", section: "Elastic Production", capacityPerHour: 0, nextPlan: "" };
-const emptyEmployee = { employeeCode: "", employeeName: "", section: "Elastic Production", shift: "General" };
+const emptyMachine = { machineCode: "", machineName: "", machineType: "Elastic", section: "Elastic Production", capacityPerHour: 0, maintenanceStatus: "Good", nextPlan: "" };
+const emptyEmployee = { employeeCode: "", employeeName: "", department: "Production", section: "Elastic Production", skill: "", shift: "General" };
 
 export default function ProductionSetupPage({ notify }) {
   const [machines, setMachines] = useState([]);

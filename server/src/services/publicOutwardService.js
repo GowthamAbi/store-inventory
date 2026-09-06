@@ -77,6 +77,7 @@ export async function issueFromExactInward(data) {
             inwardNo: inward.inwardNo,
             itemCode: inward.itemCode,
             itemName: data.itemName.trim(),
+            colour: item.colour || "",
             dcNo: data.dcNo.trim(),
             section: data.section.trim(),
             quantity: wantedQty,

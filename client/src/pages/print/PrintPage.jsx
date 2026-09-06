@@ -72,6 +72,8 @@ export default function PrintPage({ notify }) {
   const [dcNo, setDcNo] = useState("");
   const [dcReport, setDcReport] = useState(null);
   const [loading, setLoading] = useState(false);
+  const productionLink = (colour = "") =>
+    `${window.location.origin}/production?dcNo=${encodeURIComponent(dcReport?.dcNo || "")}${colour ? `&colour=${encodeURIComponent(colour)}` : ""}`;
 
   async function findRecord(event) {
     event.preventDefault();
@@ -200,6 +202,20 @@ export default function PrintPage({ notify }) {
                 </tr>
               </tfoot>
             </table>
+          </div>
+          <div className="dc-production-qrs">
+            <div className="dc-main-qr">
+              <QRGenerator value={productionLink()} size={115} />
+              <b>Main DC QR</b>
+              <small>All colours - DC {dcReport.dcNo}</small>
+            </div>
+            {[...new Set(dcReport.entries.map((entry) => entry.colour || "UNSPECIFIED"))].map((colour) => (
+              <div className="dc-colour-qr" key={colour}>
+                <QRGenerator value={productionLink(colour)} size={100} />
+                <b>{colour}</b>
+                <small>Colour QR</small>
+              </div>
+            ))}
           </div>
           <div className="remarks">
             <b>Remarks:</b>

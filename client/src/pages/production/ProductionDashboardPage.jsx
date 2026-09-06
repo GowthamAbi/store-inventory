@@ -13,6 +13,11 @@ export default function ProductionDashboardPage() {
     ["Machines Available", data.counts.available, CheckCircle2],
     ["Breakdown", data.counts.breakdown, Cog],
     ["Pending Issues", data.counts.pending, AlertTriangle],
+    ["Today Planned Pcs", data.counts.todayPlannedPcs, PlayCircle],
+    ["Today OK Pcs", data.counts.todayOkPcs, CheckCircle2],
+    ["Rework Pcs", data.counts.reworkPcs, Cog],
+    ["Rejection Pcs", data.counts.rejectionPcs, AlertTriangle],
+    ["Sewing Hold", data.counts.sewingHold, AlertTriangle],
   ];
   return <>
     <PageTitle title="Production Dashboard" subtitle="Live machine, output and pending status" />

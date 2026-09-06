@@ -5,6 +5,11 @@ import Card from "../../components/common/Card.jsx";
 import PageTitle from "../../components/common/PageTitle.jsx";
 
 const blank = { name: "", email: "", password: "", role: "store" };
+const roles = [
+  ["company_admin", "Company Admin"], ["store", "Store User"], ["production_planner", "Production Planner"],
+  ["production_operator", "Production Operator"], ["supervisor", "Supervisor"], ["quality", "Quality User"],
+  ["maintenance", "Maintenance User"], ["sewing_coordinator", "Sewing Coordinator"], ["management", "Management"], ["view_only", "View Only"],
+];
 
 export default function UserManagementPage({ notify }) {
   const [users, setUsers] = useState([]);
@@ -19,12 +24,12 @@ export default function UserManagementPage({ notify }) {
     notify("User account created");
   }
   return <>
-    <PageTitle title="User Management" subtitle="One admin with Store and Production users" />
+    <PageTitle title="User Management" subtitle="Company roles and action-level access accounts" />
     <Card title="Create User"><form className="production-start-grid" onSubmit={submit}>
       <label><span>Name</span><input required value={form.name} onChange={(event)=>setForm({...form,name:event.target.value})}/></label>
       <label><span>Email</span><input type="email" required value={form.email} onChange={(event)=>setForm({...form,email:event.target.value})}/></label>
       <label><span>Temporary Password</span><input type="password" minLength="6" required value={form.password} onChange={(event)=>setForm({...form,password:event.target.value})}/></label>
-      <label><span>Role</span><select value={form.role} onChange={(event)=>setForm({...form,role:event.target.value})}><option value="store">Store User</option><option value="production">Production User</option></select></label>
+      <label><span>Role</span><select value={form.role} onChange={(event)=>setForm({...form,role:event.target.value})}>{roles.map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
       <button className="primary">Create User</button>
     </form></Card>
     <Card title="Accounts"><DataTable rows={users} columns={[{key:"name",label:"Name"},{key:"email",label:"Email"},{key:"role",label:"Role"},{key:"createdAt",label:"Created",render:(row)=>new Date(row.createdAt).toLocaleDateString()}]}/></Card>

@@ -2,6 +2,21 @@
 
 Readable MERN project with separate `client` and `server` folders.
 
+## SaaS production workflow
+
+- Company + factory tenant isolation with audit fields.
+- SaaS Super Admin, Company Admin, Store, Planner, Operator, Supervisor,
+  Quality, Maintenance, Sewing Coordinator, Management and View Only roles.
+- Vendor, Section, Colour, Size and Sewing Unit masters.
+- DC-based plans with multiple colours and sizes.
+- Main DC QR + colour QR, machine QR and employee QR production control.
+- Complete, breakdown, thread/box/size/other-change time tracking.
+- OK, rework, rejection, balance, material pending and sewing hold flows.
+- Sewing split delivery, dashboard, combined reports, CSV/PDF/print and trace search.
+
+The first registration creates the initial company, factory and SaaS Super Admin.
+Existing single-company data is attached to a default company during startup.
+
 ## Folder structure
 
 ```
@@ -60,8 +75,9 @@ Backend: `http://localhost:5000`
 - The first registered account is the single company administrator.
 - Existing installations automatically promote the oldest account when no admin exists.
 - Admin creates separate Store and Production users from User Management.
-- Store Outward creates the Main Production QR.
-- Main Outward, Machine and Employee QR scans are retained as one production draft.
+- All colour outwards sharing one DC No. are combined in the DC generator.
+- The DC print/PDF creates one Main DC QR plus one QR for every unique colour.
+- Main DC, Colour, Machine and Employee QR scans are retained as one production draft.
 - Production runs track colour, size, planned/OK/rework/rejection/balance pieces.
 - Machine stops track Complete, Breakdown, Thread, Box, Size and Other changes.
 - Section Pending tracks shortage, elastic rejection, production/rework/sewing holds and material requests.

@@ -73,7 +73,7 @@ export async function downloadTransactionPdf(record) {
   pdf.save(`${referenceNo}.pdf`);
 }
 
-export function downloadDcPdf(report) {
+export async function downloadDcPdf(report) {
   if (!report) return;
   const pdf = new jsPDF({ orientation: "landscape" });
   const columns = [12, 25, 62, 100, 181, 216, 246];
@@ -82,6 +82,12 @@ export function downloadDcPdf(report) {
     "S.No", "Outward No", "Inward No", "Item Description",
     "Item Code", "Colour", "Quantity",
   ];
+  const colours = [...new Set(report.entries.map((entry) => entry.colour || "UNSPECIFIED"))];
+  const qrItems = [{ label: "MAIN DC", colour: "" }, ...colours.map((colour) => ({ label: colour, colour }))];
+  const qrSize = qrItems.length > 7 ? 11 : 16;
+  const qrColumns = 7;
+  const qrRows = Math.ceil(qrItems.length / qrColumns);
+  const qrBlockHeight = qrRows * (qrSize + 7) + 5;
 
   function drawTableHeader(y, fontSize = 8) {
     pdf.setFont("helvetica", "bold");
@@ -116,8 +122,8 @@ export function downloadDcPdf(report) {
   const totalLines = preparedRows.reduce((sum, row) => sum + row.lineCount, 0) || 1;
   const rowSpacing = preparedRows.length > 20 ? 0.7 : 1.2;
   const lineHeight = Math.max(
-    0.9,
-    Math.min(4, (72 - preparedRows.length * rowSpacing) / totalLines),
+    0.75,
+    Math.min(4, (68 - qrBlockHeight - preparedRows.length * rowSpacing) / totalLines),
   );
   const tableFontSize = Math.max(4, Math.min(8, lineHeight * 2));
   let y = drawTableHeader(68, tableFontSize);
@@ -138,15 +144,31 @@ export function downloadDcPdf(report) {
 
   pdf.line(10, y, 287, y);
   pdf.setFont("helvetica", "bold");
-  const footerY = Math.min(151, y + 5);
+  pdf.setFontSize(8);
+  pdf.text(`Total: ${report.totalQuantity}`, 240, y + 5);
+
+  let qrY = y + 8;
+  for (let index = 0; index < qrItems.length; index += 1) {
+    const item = qrItems[index];
+    const column = index % qrColumns;
+    const row = Math.floor(index / qrColumns);
+    const x = 14 + column * 39;
+    const currentY = qrY + row * (qrSize + 7);
+    const url = `${window.location.origin}/production?dcNo=${encodeURIComponent(report.dcNo)}${item.colour ? `&colour=${encodeURIComponent(item.colour)}` : ""}`;
+    const dataUrl = await QRCode.toDataURL(url, { width: 300, margin: 1, errorCorrectionLevel: "M" });
+    pdf.addImage(dataUrl, "PNG", x, currentY, qrSize, qrSize);
+    pdf.setFontSize(6.5);
+    pdf.text(item.label, x + qrSize / 2, currentY + qrSize + 3, { align: "center", maxWidth: 35 });
+  }
+
+  const footerY = Math.min(157, qrY + qrRows * (qrSize + 7) + 2);
   pdf.setFontSize(9);
-  pdf.text(`Total: ${report.totalQuantity}`, 240, footerY);
-  pdf.text("Remarks:", 15, footerY + 10);
-  pdf.line(15, footerY + 20, 282, footerY + 20);
-  pdf.line(15, footerY + 29, 282, footerY + 29);
-  pdf.text("Prepared By", 25, footerY + 47);
-  pdf.text("Checked By", 125, footerY + 47);
-  pdf.text("Authorized By", 230, footerY + 47);
+  pdf.text("Remarks:", 15, footerY);
+  pdf.line(15, footerY + 9, 282, footerY + 9);
+  pdf.line(15, footerY + 17, 282, footerY + 17);
+  pdf.text("Prepared By", 25, footerY + 36);
+  pdf.text("Checked By", 125, footerY + 36);
+  pdf.text("Authorized By", 230, footerY + 36);
   pdf.save(`${report.dcNo}-outward.pdf`);
 }
 

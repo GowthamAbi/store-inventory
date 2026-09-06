@@ -12,6 +12,10 @@ import ProductionSetupPage from "../pages/production/ProductionSetupPage.jsx";
 import SewingDeliveryPage from "../pages/production/SewingDeliveryPage.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import UserManagementPage from "../pages/auth/UserManagementPage.jsx";
+import CompanyManagementPage from "../pages/auth/CompanyManagementPage.jsx";
+import ProductionPlanningPage from "../pages/production/ProductionPlanningPage.jsx";
+import ReportsPage from "../pages/reports/ReportsPage.jsx";
+import ProductionMasterPage from "../pages/master/ProductionMasterPage.jsx";
 
 export default function AppRoutes({ page, notify }) {
   const { user } = useAuth();
@@ -30,8 +34,12 @@ export default function AppRoutes({ page, notify }) {
       return <HistoryPage />;
     case "Master Data":
       return <ItemMasterPage notify={notify} />;
+    case "Production Masters":
+      return <ProductionMasterPage notify={notify} />;
     case "Production Control":
       return <ProductionControlPage notify={notify} />;
+    case "Production Planning":
+      return <ProductionPlanningPage notify={notify} />;
     case "Production Dashboard":
       return <ProductionDashboardPage />;
     case "Machine & Employee":
@@ -42,8 +50,12 @@ export default function AppRoutes({ page, notify }) {
       return <SewingDeliveryPage notify={notify} />;
     case "User Management":
       return <UserManagementPage notify={notify} />;
+    case "SaaS Companies":
+      return <CompanyManagementPage notify={notify} />;
+    case "Reports & Traceability":
+      return <ReportsPage notify={notify} />;
     default:
-      return user?.role === "production"
+      return user?.role?.includes("production") || ["supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"].includes(user?.role)
         ? <ProductionDashboardPage />
         : <DashboardPage />;
   }

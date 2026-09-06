@@ -5,6 +5,7 @@ const schema = new mongoose.Schema(
     inwardNo: String,
     itemCode: { type: String, required: true },
     itemName: { type: String, default: "" },
+    colour: { type: String, default: "", uppercase: true },
     dcNo: String,
     section: String,
     quantity: { type: Number, required: true },

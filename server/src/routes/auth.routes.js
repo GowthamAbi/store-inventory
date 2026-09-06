@@ -17,7 +17,7 @@ router.post("/register", asyncHandler(register));
 router.post("/login", asyncHandler(login));
 router.post("/forgot-password", asyncHandler(forgotPassword));
 router.post("/reset-password", asyncHandler(resetPassword));
-router.get("/users", requireAuth, allowRoles("admin"), asyncHandler(getUsers));
-router.post("/users", requireAuth, allowRoles("admin"), asyncHandler(createUser));
+router.get("/users", requireAuth, allowRoles("saas_super_admin", "company_admin", "admin"), asyncHandler(getUsers));
+router.post("/users", requireAuth, allowRoles("saas_super_admin", "company_admin", "admin"), asyncHandler(createUser));
 
 export default router;

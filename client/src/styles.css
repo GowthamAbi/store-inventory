@@ -241,6 +241,51 @@
   gap: 10px;
   margin-top: 35px;
 }
+.dc-production-qrs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px dashed #188267;
+  border-radius: 12px;
+}
+.dc-main-qr,
+.dc-colour-qr {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  min-width: 120px;
+}
+.dc-main-qr {
+  padding-right: 14px;
+  border-right: 2px solid #188267;
+}
+.dc-production-qrs small {
+  color: #64748b;
+}
+.dc-load-form {
+  display: flex;
+  gap: 10px;
+  padding: 16px;
+}
+.dc-load-form input {
+  flex: 1;
+  padding: 11px;
+  border: 1px solid #cedbd7;
+  border-radius: 9px;
+}
+.dc-colour-plan {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  padding: 0 16px 16px;
+}
+.dc-colour-plan > span {
+  color: #64748b;
+}
 .public-message.success p {
   margin: 0 0 8px;
 }
@@ -349,6 +394,20 @@
   .dc-print .remarks {
     margin-top: 10px;
   }
+  .dc-production-qrs {
+    gap: 7px;
+    margin-top: 7px;
+    padding: 6px;
+  }
+  .dc-production-qrs .qr-image {
+    width: 62px;
+    height: 62px;
+  }
+  .dc-main-qr,
+  .dc-colour-qr {
+    min-width: 72px;
+    font-size: 8px;
+  }
   .dc-print .remarks span {
     height: 18px;
   }
@@ -363,6 +422,40 @@
   body[data-print-target="dc-print"] #dc-print {
     display: block !important;
   }
+}
+
+.plan-lines {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border, #d9e3df);
+  border-radius: 12px;
+  background: #f8fbfa;
+}
+
+.plan-line {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr auto;
+  gap: 8px;
+}
+
+.report-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.report-filters label {
+  display: grid;
+  gap: 6px;
+  text-transform: capitalize;
+}
+
+@media (max-width: 760px) {
+  .plan-line { grid-template-columns: 1fr 1fr; }
+  .plan-line button { grid-column: 1 / -1; }
 }
 
 /* Standalone QR outward page: deliberately has no app sidebar or dashboard. */

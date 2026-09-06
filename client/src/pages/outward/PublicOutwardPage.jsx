@@ -5,7 +5,6 @@ import {
   getPublicInward,
 } from "../../api/publicOutwardApi.js";
 import { downloadTransactionPdf } from "../../services/printService.js";
-import QRGenerator from "../../components/qr/QRGenerator.jsx";
 
 export default function PublicOutwardPage({ inwardNo }) {
   const [inward, setInward] = useState(null);
@@ -210,17 +209,6 @@ export default function PublicOutwardPage({ inwardNo }) {
           {status.success && (
             <div className="public-message success">
               <p>{status.success}</p>
-              <div className="main-outward-qr">
-                <QRGenerator
-                  value={receipt?.outwardNo ? `${window.location.origin}/production?outwardNo=${encodeURIComponent(receipt.outwardNo)}` : ""}
-                  size={150}
-                />
-                <div>
-                  <b>Main Production Outward QR</b>
-                  <small>{receipt?.outwardNo}</small>
-                  <p>Production page-ல் இந்த QR-ஐ scan செய்யவும்.</p>
-                </div>
-              </div>
               <button type="button" onClick={() => downloadTransactionPdf(receipt)}>Download Outward PDF</button>
             </div>
           )}

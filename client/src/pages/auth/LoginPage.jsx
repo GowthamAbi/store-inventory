@@ -12,7 +12,7 @@ export default function LoginPage({ initialMode = false }) {
   const [submitting, setSubmitting] = useState(false);
   const resetToken = new URLSearchParams(window.location.search).get("resetToken");
   const [forgotMode, setForgotMode] = useState(Boolean(resetToken));
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "store" });
+  const [form, setForm] = useState({ name: "", companyName: "", factoryName: "", email: "", password: "", role: "store" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -88,7 +88,7 @@ export default function LoginPage({ initialMode = false }) {
         <p>{registerMode ? "Create the first company administrator" : "Sign in to continue"}</p>
 
         {registerMode && (
-          <><Field label="Name">
+          <><Field label="Administrator Name">
             <input
               required
               value={form.name}
@@ -96,7 +96,7 @@ export default function LoginPage({ initialMode = false }) {
                 setForm({ ...form, name: event.target.value })
               }
             />
-          </Field></>
+          </Field><Field label="Company Name"><input required value={form.companyName} onChange={(event) => setForm({ ...form, companyName: event.target.value })} /></Field><Field label="Factory Name"><input required value={form.factoryName} onChange={(event) => setForm({ ...form, factoryName: event.target.value })} /></Field></>
         )}
 
         <Field label="Email">

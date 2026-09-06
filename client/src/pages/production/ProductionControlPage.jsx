@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { getJobs, resumeProductionJob, startProductionJob, stopProductionJob } from "../../api/productionApi.js";
+import { getJobs, getProductionDc, resumeProductionJob, startProductionJob, stopProductionJob } from "../../api/productionApi.js";
 import DataTable from "../../components/DataTable.jsx";
 import Card from "../../components/common/Card.jsx";
 import PageTitle from "../../components/common/PageTitle.jsx";
 import QRGenerator from "../../components/qr/QRGenerator.jsx";
 
-const blankStart = { outwardNo: "", machineCode: "", employeeCode: "", section: "Elastic Production", colour: "", size: "", plannedPcs: "" };
+const blankStart = { dcNo: "", machineCode: "", employeeCode: "", section: "Elastic Production", colour: "", size: "", plannedPcs: "" };
 const DRAFT_KEY = "elastic_production_scan_draft";
 
 function initialScanForm() {
@@ -14,7 +14,7 @@ function initialScanForm() {
   return {
     ...blankStart,
     ...saved,
-    ...Object.fromEntries(["outwardNo", "machineCode", "employeeCode", "colour", "size"].filter((key) => params.get(key)).map((key) => [key, params.get(key)])),
+    ...Object.fromEntries(["dcNo", "machineCode", "employeeCode", "colour", "size"].filter((key) => params.get(key)).map((key) => [key, params.get(key)])),
   };
 }
 const blankStop = { action: "Complete", okPcs: "", reworkPcs: "", rejectionPcs: "", reason: "" };
@@ -24,8 +24,15 @@ export default function ProductionControlPage({ notify }) {
   const [startForm, setStartForm] = useState(initialScanForm);
   const [selectedJob, setSelectedJob] = useState(null);
   const [stopForm, setStopForm] = useState(blankStop);
+  const [dcPlan, setDcPlan] = useState(null);
   async function load() { setJobs(await getJobs()); }
   useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (startForm.dcNo) getProductionDc(startForm.dcNo).then((data) => {
+      setDcPlan(data);
+      setStartForm((current) => ({ ...current, section: data.section || current.section }));
+    }).catch(() => setDcPlan(null));
+  }, []);
   useEffect(() => { localStorage.setItem(DRAFT_KEY, JSON.stringify(startForm)); }, [startForm]);
   async function start(event) { event.preventDefault(); await startProductionJob(startForm); setStartForm(blankStart); localStorage.removeItem(DRAFT_KEY); await load(); notify("Production started"); }
   async function stop(event) { event.preventDefault(); await stopProductionJob(selectedJob._id, stopForm); setSelectedJob(null); setStopForm(blankStop); await load(); notify("Production status updated"); }
@@ -33,8 +40,8 @@ export default function ProductionControlPage({ notify }) {
   const eventStatuses = ["Breakdown", "Thread Change", "Box Change", "Size Change", "Other Change"];
   const scannedMachineJob = jobs.find((job) => job.machineCode === startForm.machineCode.toUpperCase() && ["Running", ...eventStatuses].includes(job.status));
   const columns = [
-    { key: "jobNo", label: "Production No." }, { key: "outwardNo", label: "Main Outward QR" },
-    { key: "colourQr", label: "Colour / Size QR", render: (job) => <div className="mini-qr"><QRGenerator value={`${window.location.origin}/production?outwardNo=${encodeURIComponent(job.outwardNo)}&colour=${encodeURIComponent(job.colour)}&size=${encodeURIComponent(job.size)}`} size={64}/><small>{job.colour}-{job.size}</small></div> },
+    { key: "jobNo", label: "Production No." }, { key: "dcNo", label: "Main DC" },
+    { key: "colourQr", label: "Colour / Size QR", render: (job) => <div className="mini-qr"><QRGenerator value={`${window.location.origin}/production?dcNo=${encodeURIComponent(job.dcNo)}&colour=${encodeURIComponent(job.colour)}&size=${encodeURIComponent(job.size)}`} size={64}/><small>{job.colour}-{job.size}</small></div> },
     { key: "machineCode", label: "Machine QR" }, { key: "employeeCode", label: "Employee QR" },
     { key: "colour", label: "Colour" }, { key: "size", label: "Size" },
     { key: "plannedPcs", label: "Plan Pcs" }, { key: "okPcs", label: "OK Pcs" },
@@ -44,10 +51,17 @@ export default function ProductionControlPage({ notify }) {
       : job.status === "Running" ? <button className="danger" onClick={() => setSelectedJob(job)}>Stop</button> : "—" },
   ];
   return <>
-    <PageTitle title="Production Control" subtitle="Scan main outward, machine and employee QR to start" />
+    <PageTitle title="Production Control" subtitle="Scan Main DC, Colour, Machine and Employee QR to start" />
+    <Card title="Load Common DC">
+      <form className="dc-load-form" onSubmit={async (event) => { event.preventDefault(); const data = await getProductionDc(startForm.dcNo); setDcPlan(data); setStartForm({...startForm, section:data.section || startForm.section}); }}>
+        <input required value={startForm.dcNo} placeholder="Scan Main DC QR or enter DC No." onChange={(event)=>setStartForm({...startForm,dcNo:event.target.value.toUpperCase()})}/>
+        <button className="primary">Load DC Colours</button>
+      </form>
+      {dcPlan && <div className="dc-colour-plan"><b>DC {dcPlan.dcNo}</b><span>{dcPlan.itemNames.join(", ")}</span>{dcPlan.colours.map((colour)=><button type="button" className={startForm.colour===colour?"primary":""} key={colour} onClick={()=>setStartForm({...startForm,colour})}>{colour}</button>)}</div>}
+    </Card>
     {scannedMachineJob && <div className="scan-result-card"><b>{scannedMachineJob.machineCode} is {scannedMachineJob.status}</b><span>{scannedMachineJob.colour} · Size {scannedMachineJob.size} · Balance {scannedMachineJob.balancePcs} pcs</span>{scannedMachineJob.status === "Running" ? <button className="danger" onClick={() => setSelectedJob(scannedMachineJob)}>Stop Machine</button> : <button onClick={() => resume(scannedMachineJob)}>Complete Change / Resume</button>}</div>}
     <Card title="Start Production">
-      <form className="production-start-grid" onSubmit={start}>{Object.keys(blankStart).map((key) => <label key={key}><span>{key}</span><input required value={startForm[key]} type={key === "plannedPcs" ? "number" : "text"} placeholder={key.includes("Code") || key === "outwardNo" ? "Scan or enter QR code" : ""} onChange={(event) => setStartForm({ ...startForm, [key]: event.target.value })} /></label>)}<button className="primary">Start Production</button></form>
+      <form className="production-start-grid" onSubmit={start}>{Object.keys(blankStart).filter(key=>key!=="dcNo").map((key) => <label key={key}><span>{key}</span>{key === "colour" && dcPlan ? <select required value={startForm.colour} onChange={(event)=>setStartForm({...startForm,colour:event.target.value})}><option value="">Select DC Colour</option>{dcPlan.colours.map(colour=><option key={colour}>{colour}</option>)}</select> : <input required value={startForm[key]} type={key === "plannedPcs" ? "number" : "text"} placeholder={key.includes("Code") ? "Scan or enter QR code" : ""} onChange={(event) => setStartForm({ ...startForm, [key]: event.target.value })} />}</label>)}<button className="primary">Start Production</button></form>
     </Card>
     {selectedJob && <Card title={`Stop ${selectedJob.jobNo}`}><form className="production-start-grid" onSubmit={stop}>
       <label><span>Stop Option</span><select value={stopForm.action} onChange={(event) => setStopForm({ ...stopForm, action: event.target.value })}>{["Complete","Breakdown","Thread Change","Box Change","Size Change","Other Change"].map((value) => <option key={value}>{value}</option>)}</select></label>

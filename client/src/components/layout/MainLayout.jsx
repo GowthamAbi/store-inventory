@@ -15,6 +15,9 @@ import {
   Wrench,
   Scissors,
   Users,
+  ClipboardList,
+  BarChart3,
+  Building2,
   Sparkles,
   X,
 } from "lucide-react";
@@ -22,20 +25,24 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 
 const navigation = [
-  ["Dashboard", LayoutDashboard, ["admin", "store", "production"]],
-  ["Inward", ArrowDownToLine, ["admin", "store"]],
-  ["PO", ShoppingCart, ["admin", "store"]],
-  ["PO Pending", Clock3, ["admin", "store"]],
-  ["Print", Printer, ["admin", "store"]],
-  ["Stock", Boxes, ["admin", "store"]],
-  ["History", FileClock, ["admin", "store"]],
-  ["Master Data", Settings2, ["admin", "store"]],
-  ["Production Control", Activity, ["admin", "production"]],
-  ["Production Dashboard", LayoutDashboard, ["admin"]],
-  ["Machine & Employee", Factory, ["admin", "production"]],
-  ["Pending & Issues", Wrench, ["admin", "production"]],
-  ["Sewing Delivery", Scissors, ["admin", "production"]],
-  ["User Management", Users, ["admin"]],
+  ["Dashboard", LayoutDashboard, ["saas_super_admin", "company_admin", "admin", "store", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"]],
+  ["Inward", ArrowDownToLine, ["saas_super_admin", "company_admin", "admin", "store"]],
+  ["PO", ShoppingCart, ["saas_super_admin", "company_admin", "admin", "store"]],
+  ["PO Pending", Clock3, ["saas_super_admin", "company_admin", "admin", "store"]],
+  ["Print", Printer, ["saas_super_admin", "company_admin", "admin", "store"]],
+  ["Stock", Boxes, ["saas_super_admin", "company_admin", "admin", "store", "management", "view_only"]],
+  ["History", FileClock, ["saas_super_admin", "company_admin", "admin", "store", "management", "view_only"]],
+  ["Master Data", Settings2, ["saas_super_admin", "company_admin", "admin", "store"]],
+  ["Production Masters", Settings2, ["saas_super_admin", "company_admin", "admin", "store", "production", "production_planner"]],
+  ["Production Planning", ClipboardList, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "supervisor"]],
+  ["Production Control", Activity, ["saas_super_admin", "company_admin", "admin", "production", "production_operator", "supervisor"]],
+  ["Production Dashboard", LayoutDashboard, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "supervisor", "quality", "maintenance", "management", "view_only"]],
+  ["Machine & Employee", Factory, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "maintenance"]],
+  ["Pending & Issues", Wrench, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "supervisor", "quality", "maintenance", "sewing_coordinator"]],
+  ["Sewing Delivery", Scissors, ["saas_super_admin", "company_admin", "admin", "production", "sewing_coordinator"]],
+  ["Reports & Traceability", BarChart3, ["saas_super_admin", "company_admin", "admin", "production_planner", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"]],
+  ["User Management", Users, ["saas_super_admin", "company_admin", "admin"]],
+  ["SaaS Companies", Building2, ["saas_super_admin"]],
 ];
 
 export default function MainLayout({ page, onPageChange, children }) {
@@ -95,7 +102,7 @@ export default function MainLayout({ page, onPageChange, children }) {
             <Menu />
           </button>
           <div>
-            <small>{user?.role === "production" ? "Elastic Production" : "Accessories Store"}</small>
+            <small>{user?.role?.includes("production") ? "Elastic Production" : "Accessories Flow SaaS"}</small>
             <h1>{page}</h1>
           </div>
         </header>

@@ -3,10 +3,11 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 import crypto from "node:crypto";
+import Company from "../models/Company.js";
 
 function createToken(user) {
   return jwt.sign(
-    { id: user._id, name: user.name, role: user.role },
+    { id: user._id, name: user.name, role: user.role, companyId: user.companyId, factoryId: user.factoryId, permissions: user.permissions },
     process.env.JWT_SECRET,
     { expiresIn: "7d" },
   );
@@ -15,12 +16,12 @@ function createToken(user) {
 function createAuthResponse(user) {
   return {
     token: createToken(user),
-    user: { name: user.name, email: user.email, role: user.role },
+    user: { name: user.name, email: user.email, role: user.role, companyId: user.companyId, factoryId: user.factoryId, permissions: user.permissions || [] },
   };
 }
 
 export async function register(request, response) {
-  const { name, email, password } = request.body;
+  const { name, email, password, companyName = "Accessories Flow", factoryName = "Main Factory" } = request.body;
 
   if (!name || !email || !password) {
     throw new ApiError(400, "Name, email and password are required");
@@ -34,27 +35,43 @@ export async function register(request, response) {
     throw new ApiError(409, "Email already registered");
   }
 
+  let company = await Company.findOne();
+  if (company) {
+    company.companyName = companyName;
+    company.factories = [{ name: factoryName, code: "MAIN" }];
+    await company.save();
+  } else {
+    company = await Company.create({ companyName, factories: [{ name: factoryName, code: "MAIN" }] });
+  }
   const user = await User.create({
     name,
     email,
     password: await bcrypt.hash(password, 12),
-    role: "admin",
+    role: "saas_super_admin",
+    companyId: company._id,
+    factoryId: company.factories[0]._id,
   });
 
   response.status(201).json(createAuthResponse(user));
 }
 
 export async function getUsers(_request, response) {
-  response.json(await User.find().select("name email role createdAt").sort({ createdAt: 1 }));
+  response.json(await User.find().select("name email role permissions active companyId factoryId createdAt").sort({ createdAt: 1 }));
 }
 
 export async function createUser(request, response) {
   const { name, email, password, role } = request.body;
-  if (!name || !email || !password || !["store", "production"].includes(role)) {
-    throw new ApiError(400, "Name, email, password and Store/Production role are required");
+  const allowedRoles = ["company_admin", "admin", "store", "production_planner", "production_operator", "production", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"];
+  if (!name || !email || !password || !allowedRoles.includes(role)) {
+    throw new ApiError(400, "Name, email, password and a valid role are required");
   }
   if (await User.exists({ email: email.toLowerCase() })) throw new ApiError(409, "Email already registered");
-  const user = await User.create({ name, email, password: await bcrypt.hash(password, 12), role });
+  const user = await User.create({
+    name, email, password: await bcrypt.hash(password, 12), role,
+    permissions: request.body.permissions || [],
+    companyId: request.body.companyId || request.user.companyId,
+    factoryId: request.body.factoryId || request.user.factoryId,
+  });
   response.status(201).json({ _id: user._id, name: user.name, email: user.email, role: user.role });
 }
 
@@ -121,5 +138,6 @@ export async function login(request, response) {
     user && (await bcrypt.compare(request.body.password || "", user.password));
 
   if (!validPassword) throw new ApiError(401, "Incorrect email or password");
+  if (!user.active) throw new ApiError(403, "This user account is disabled");
   response.json(createAuthResponse(user));
 }

@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import ApiError from "../utils/ApiError.js";
+import { tenantContext } from "../utils/tenantContext.js";
 
 export function requireAuth(request, _response, next) {
   const token = request.headers.authorization?.replace("Bearer ", "");
@@ -10,7 +11,7 @@ export function requireAuth(request, _response, next) {
 
   try {
     request.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
+    tenantContext.run(request.user, next);
   } catch {
     next(new ApiError(401, "Your login is invalid or expired"));
   }
