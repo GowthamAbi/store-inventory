@@ -91,6 +91,11 @@ export async function createInward(inwardData) {
           {
             inwardNo: inwardNumber,
             itemCode: item.itemCode,
+            brand: item.brand || "",
+            description: item.description || item.itemCode,
+            type: item.type || "",
+            colour: item.colour || "",
+            unit: item.unit || "MTR",
             poNo: inwardData.poNo,
             indentNo: purchaseOrder.indentNo || "",
             quantity: Number(inwardData.quantity),

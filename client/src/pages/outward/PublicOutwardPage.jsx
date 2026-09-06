@@ -9,6 +9,8 @@ import { downloadTransactionPdf } from "../../services/printService.js";
 export default function PublicOutwardPage({ inwardNo }) {
   const [inward, setInward] = useState(null);
   const [receipt, setReceipt] = useState(null);
+  const [scanNext, setScanNext] = useState(false);
+  const [nextScanValue, setNextScanValue] = useState("");
   const [form, setForm] = useState({ itemName: "", dcNo: "", section: "", wantedMtr: "" });
   const [status, setStatus] = useState({
     loading: true,
@@ -91,6 +93,22 @@ export default function PublicOutwardPage({ inwardNo }) {
         error: error.message,
       }));
     }
+  }
+
+  function openNextInward(event) {
+    event.preventDefault();
+    const scannedValue = nextScanValue.trim();
+    if (!scannedValue) return;
+    let nextInwardNo = scannedValue;
+    try {
+      const scannedUrl = new URL(scannedValue);
+      nextInwardNo = scannedUrl.searchParams.get("inwardNo") || scannedValue;
+    } catch {
+      // Hardware scanners may enter only the inward number.
+    }
+    window.location.assign(
+      `/outward?inwardNo=${encodeURIComponent(nextInwardNo.toUpperCase())}`,
+    );
   }
 
   if (status.loading)
@@ -206,13 +224,6 @@ export default function PublicOutwardPage({ inwardNo }) {
           {status.error && (
             <p className="public-message error">{status.error}</p>
           )}
-          {status.success && (
-            <div className="public-message success">
-              <p>{status.success}</p>
-              <button type="button" onClick={() => downloadTransactionPdf(receipt)}>Download Outward PDF</button>
-            </div>
-          )}
-
           <button
             className="public-submit"
             disabled={status.saving || inward.availableQty <= 0}
@@ -225,6 +236,31 @@ export default function PublicOutwardPage({ inwardNo }) {
           </button>
         </form>
       </section>
+      {receipt && (
+        <div className="outward-success-overlay" role="dialog" aria-modal="true">
+          <section className="outward-success-popup">
+            <PackageCheck />
+            <h2>Outward Completed</h2>
+            <p><b>{receipt.outwardNo}</b> successfully saved.</p>
+            <p>DC No: {receipt.dcNo} · Quantity: {receipt.quantity} {receipt.unit}</p>
+            {!scanNext ? (
+              <div className="outward-success-actions">
+                <button type="button" onClick={() => downloadTransactionPdf(receipt)}>Download Outward PDF</button>
+                <button className="primary" type="button" onClick={() => setScanNext(true)}>Scan Next Inward</button>
+              </div>
+            ) : (
+              <form className="next-inward-scan" onSubmit={openNextInward}>
+                <label>
+                  <span>Scan QR or enter next Inward No.</span>
+                  <input autoFocus value={nextScanValue} onChange={(event) => setNextScanValue(event.target.value)} placeholder="INW-... or complete QR link" />
+                </label>
+                <button className="primary">Open Next Inward</button>
+                <button type="button" onClick={() => setScanNext(false)}>Back</button>
+              </form>
+            )}
+          </section>
+        </div>
+      )}
     </main>
   );
 }

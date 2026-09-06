@@ -13,6 +13,12 @@ Readable MERN project with separate `client` and `server` folders.
 - Complete, breakdown, thread/box/size/other-change time tracking.
 - OK, rework, rejection, balance, material pending and sewing hold flows.
 - Sewing split delivery, dashboard, combined reports, CSV/PDF/print and trace search.
+- DC print keeps the Main DC QR at the top centre and one exact row QR for each
+  Outward No. + Inward No. + Colour combination.
+- Public QR outward saves company/factory ownership and repairs legacy records
+  that previously caused a DC print 404.
+- Inward lots retain brand, description, type, colour and unit for traceability.
+- Mobile outward completion shows a confirmation popup and next-inward scan entry.
 
 The first registration creates the initial company, factory and SaaS Super Admin.
 Existing single-company data is attached to a default company during startup.

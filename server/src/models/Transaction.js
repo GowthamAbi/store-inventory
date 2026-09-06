@@ -7,6 +7,7 @@ const transactionSchema = new mongoose.Schema(
     inwardReference: { type: String, default: "" },
     itemCode: { type: String, required: true, uppercase: true },
     itemName: { type: String, default: "" },
+    colour: { type: String, default: "", uppercase: true },
     poNo: { type: String, default: "" },
     indentNo: { type: String, default: "" },
     dcNo: { type: String, default: "" },
