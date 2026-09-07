@@ -1590,10 +1590,45 @@ td {
 .qr-camera {
   position: relative;
   overflow: hidden;
-  margin-top: 9px;
   border-radius: 12px;
   background: #071511;
   aspect-ratio: 4 / 3;
+}
+.qr-camera-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(2, 16, 13, 0.78);
+}
+.qr-camera-modal {
+  width: min(94vw, 520px);
+  padding: 14px;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+.qr-camera-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: #123c33;
+}
+.qr-camera-title button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+}
+.qr-camera-modal > small {
+  display: block;
+  padding: 10px 2px 1px;
+  color: #61736d;
+  text-align: center;
 }
 .qr-camera video {
   width: 100%;
