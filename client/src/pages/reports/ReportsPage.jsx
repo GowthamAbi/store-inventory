@@ -15,11 +15,6 @@ const groups = {
 const initialFilters = { from: "", to: "", po: "", dc: "", item: "", colour: "", machine: "", employee: "", status: "" };
 const hiddenFields = ["__v", "companyId", "factoryId", "password"];
 
-function uniqueValues(data, keys) {
-  return [...new Set(Object.values(data || {}).flat().flatMap((row) => keys.map((key) => row[key])).filter(Boolean).map(String))]
-    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-}
-
 export default function ReportsPage({ notify }) {
   const { user } = useAuth();
   const [filters, setFilters] = useState(initialFilters);
@@ -40,10 +35,6 @@ export default function ReportsPage({ notify }) {
   useEffect(() => { load(); }, []);
 
   const allRows = useMemo(() => Object.entries(data || {}).flatMap(([type, entries]) => entries.map((row) => ({ reportType: groups[type] || type, ...row }))), [data]);
-  const filterOptions = useMemo(() => ({
-    colour: uniqueValues(data, ["colour"]), machine: uniqueValues(data, ["machineCode"]),
-    employee: uniqueValues(data, ["employeeCode"]), status: uniqueValues(data, ["status"]),
-  }), [data]);
   const activeRows = data?.[activeGroup] || [];
   const roleScope = ["saas_super_admin", "company_admin", "admin"].includes(user?.role)
     ? "Store + Production" : user?.role === "store" ? "Store Reports" : "Production Reports";
@@ -61,8 +52,7 @@ export default function ReportsPage({ notify }) {
       <div><RefreshCw /><span><b>{loading ? "Loading" : "Ready"}</b><small>Report Status</small></span></div>
     </div>
     <Card title="Date Range & Report Filters"><form className="report-filters professional-report-filters" onSubmit={load}>
-      {["from", "to", "po", "dc", "item"].map((key) => <label key={key}><span>{key === "from" ? "From Date" : key === "to" ? "To Date" : key === "po" ? "PO No" : key === "dc" ? "DC No" : key}</span><input type={["from", "to"].includes(key) ? "date" : "text"} value={filters[key]} onChange={(event) => setFilters({ ...filters, [key]: event.target.value })} /></label>)}
-      {["colour", "machine", "employee", "status"].map((key) => <label key={key}><span>{key}</span><select value={filters[key]} onChange={(event) => setFilters({ ...filters, [key]: event.target.value })}><option value="">All {key}</option>{filterOptions[key].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>)}
+      {["from", "to"].map((key) => <label key={key}><span>{key === "from" ? "From Date" : "To Date"}</span><input type="date" value={filters[key]} onChange={(event) => setFilters({ ...filters, [key]: event.target.value })} /></label>)}
       <div className="report-filter-actions"><button type="button" onClick={() => { setFilters(initialFilters); load(null, initialFilters); }}>Reset</button><button className="primary" disabled={loading}>{loading ? "Loading..." : "Apply Filters"}</button></div>
     </form></Card>
     {data && <Card title="Report Results">

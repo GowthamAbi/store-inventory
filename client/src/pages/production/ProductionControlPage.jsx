@@ -36,6 +36,14 @@ export default function ProductionControlPage({ notify }) {
     }).catch(() => setDcPlan(null));
   }, []);
   useEffect(() => { localStorage.setItem(DRAFT_KEY, JSON.stringify(startForm)); }, [startForm]);
+  useEffect(() => {
+    if (!jobs.length || !startForm.machineCode || !(startForm.dcNo || startForm.outwardNo)) return;
+    const runningJob = jobs.find((job) => job.machineCode === startForm.machineCode.toUpperCase() && ["Running", "Breakdown", "Thread Change", "Box Change", "Size Change", "Other Change"].includes(job.status));
+    if (runningJob) {
+      setMachineWarning(runningJob);
+      setStartForm((current) => ({ ...current, machineCode: "" }));
+    }
+  }, [jobs, startForm.machineCode, startForm.dcNo, startForm.outwardNo]);
   async function start(event) {
     event.preventDefault();
     const sizes = startForm.size.split(",").map((value) => value.trim()).filter(Boolean);
@@ -82,7 +90,7 @@ export default function ProductionControlPage({ notify }) {
         <input required value={startForm.dcNo} placeholder="Scan Main DC QR or enter DC No." onChange={(event)=>setStartForm({...startForm,dcNo:event.target.value.toUpperCase()})}/>
         <button className="primary">Load DC Colours</button>
       </form>
-      {dcPlan && <div className="dc-colour-plan"><b>DC {dcPlan.dcNo}</b><span>{dcPlan.itemNames.join(", ")}</span>{dcPlan.colours.map((colour)=><button type="button" className={startForm.colour===colour?"primary":""} key={colour} onClick={()=>setStartForm({...startForm,colour})}>{colour}</button>)}</div>}
+      {dcPlan && <div className="dc-colour-plan"><b>DC {dcPlan.dcNo}</b><span>{dcPlan.itemNames.join(", ")}</span>{dcPlan.colours.map((colour)=>{const row=dcPlan.rows.find((entry)=>entry.colour===colour);return <button type="button" className={startForm.colour===colour?"primary":""} key={colour} onClick={()=>setStartForm({...startForm,colour,outwardNo:row?.outwardNo||row?.referenceNo||"",inwardNo:row?.inwardNo||row?.inwardReference||""})}>{colour}</button>;})}</div>}
     </Card>
     {!startForm.dcNo && scannedMachineJob && <div className="scan-result-card"><b>{scannedMachineJob.machineCode} is {scannedMachineJob.status}</b><span>{scannedMachineJob.colour} · Size {scannedMachineJob.size} · Balance {scannedMachineJob.balancePcs} pcs</span>{scannedMachineJob.status === "Running" ? <button className="danger" onClick={() => setSelectedJob(scannedMachineJob)}>Stop Machine</button> : <button onClick={() => resume(scannedMachineJob)}>Complete Change / Resume</button>}</div>}
     <Card title="Start Production">

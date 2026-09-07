@@ -48,6 +48,10 @@ export default function AppRoutes({ page, notify, onPageChange }) {
       return <ProductionPlanningPage notify={notify} />;
     case "Production Dashboard":
       return <ProductionDashboardPage />;
+    case "Machine Register":
+      return <ProductionSetupPage mode="machine" notify={notify} />;
+    case "Employee Register":
+      return <ProductionSetupPage mode="employee" notify={notify} />;
     case "Machine & Employee":
       return <ProductionSetupPage notify={notify} />;
     case "Pending & Issues":

@@ -105,7 +105,7 @@ export default function MachineStatusPage() {
         <div className="gantt-hours"><b>Machine</b><div>{Array.from({ length: 24 }, (_, hour) => <span key={hour}>{String(hour).padStart(2, "0")}</span>)}</div><b>Status</b></div>
         {data.machines.map((machine) => {
           const segments = data.jobs.filter((job) => job.machineCode === machine.machineCode).flatMap((job) => jobSegments(job, todayStart, todayEnd));
-          return <button type="button" className={`gantt-machine-row ${selectedMachine === machine.machineCode ? "selected" : ""}`} key={machine._id} onClick={() => setSelectedMachine(machine.machineCode)}>
+          return <button type="button" className={`gantt-machine-row ${selectedMachine === machine.machineCode ? "selected" : ""}`} key={machine._id} onClick={() => setSelectedMachine((current) => current === machine.machineCode ? null : machine.machineCode)}>
             <span className="gantt-machine-name"><b>{machine.machineCode}</b><small>{machine.machineName}</small></span>
             <span className="gantt-track">{segments.map((segment, index) => {
               const left = overlapHours(todayStart, segment.start, todayStart, todayEnd) / 24 * 100;

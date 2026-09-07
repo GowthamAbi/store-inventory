@@ -16,6 +16,7 @@ import {
   Scissors,
   Users,
   ClipboardList,
+  ChevronDown,
   BarChart3,
   Building2,
   Sparkles,
@@ -34,11 +35,10 @@ const navigation = [
   ["Stock", Boxes, ["saas_super_admin", "company_admin", "admin", "store", "management", "view_only"]],
   ["History", FileClock, ["saas_super_admin", "company_admin", "admin", "store", "management", "view_only"]],
   ["Master Data", Settings2, ["saas_super_admin", "company_admin", "admin", "store"]],
-  ["Production Masters", Settings2, ["saas_super_admin", "company_admin", "admin", "store", "production", "production_planner"]],
+  ["Masters", Settings2, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "maintenance"]],
   ["Production Planning", ClipboardList, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "supervisor"]],
   ["Production Control", Activity, ["saas_super_admin", "company_admin", "admin", "production", "production_operator", "supervisor"]],
   ["Status", Clock3, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance", "management", "view_only"]],
-  ["Machine & Employee", Factory, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "maintenance"]],
   ["Pending & Issues", Wrench, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "supervisor", "quality", "maintenance", "sewing_coordinator"]],
   ["Sewing Delivery", Scissors, ["saas_super_admin", "company_admin", "admin", "production", "sewing_coordinator"]],
   ["Reports", BarChart3, ["saas_super_admin", "company_admin", "admin", "store", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"]],
@@ -48,6 +48,7 @@ const navigation = [
 
 export default function MainLayout({ page, onPageChange, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mastersOpen, setMastersOpen] = useState(["Production Masters", "Machine Register", "Employee Register"].includes(page));
   const { user, logout } = useAuth();
 
   function selectPage(pageName) {
@@ -78,16 +79,14 @@ export default function MainLayout({ page, onPageChange, children }) {
         </div>
 
         <nav>
-          {navigation.filter(([, , roles]) => roles.includes(user?.role)).map(([name, Icon]) => (
-            <button
-              className={page === name ? "active" : ""}
-              key={name}
-              onClick={() => selectPage(name)}
-            >
-              <Icon />
-              {name}
-            </button>
-          ))}
+          {navigation.filter(([, , roles]) => roles.includes(user?.role)).map(([name, Icon]) => name === "Masters" ? <div className="nav-group" key={name}>
+            <button className={["Production Masters", "Machine Register", "Employee Register"].includes(page) ? "group-active" : ""} onClick={() => setMastersOpen((open) => !open)}><Icon /><span>Masters</span><ChevronDown className={mastersOpen ? "chevron open" : "chevron"} /></button>
+            {mastersOpen && <div className="nav-submenu">
+              <button className={page === "Production Masters" ? "active" : ""} onClick={() => selectPage("Production Masters")}>Production Master</button>
+              <button className={page === "Machine Register" ? "active" : ""} onClick={() => selectPage("Machine Register")}>Machine Register + QR</button>
+              <button className={page === "Employee Register" ? "active" : ""} onClick={() => selectPage("Employee Register")}>Employee Register + QR</button>
+            </div>}
+          </div> : <button className={page === name ? "active" : ""} key={name} onClick={() => selectPage(name)}><Icon />{name}</button>)}
         </nav>
 
         <div className="profile">
