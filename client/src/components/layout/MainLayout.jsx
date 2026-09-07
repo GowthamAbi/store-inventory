@@ -37,7 +37,6 @@ const navigation = [
   ["Production Masters", Settings2, ["saas_super_admin", "company_admin", "admin", "store", "production", "production_planner"]],
   ["Production Planning", ClipboardList, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "supervisor"]],
   ["Production Control", Activity, ["saas_super_admin", "company_admin", "admin", "production", "production_operator", "supervisor"]],
-  ["Production Dashboard", LayoutDashboard, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "supervisor", "quality", "maintenance", "management", "view_only"]],
   ["Machine & Employee", Factory, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "maintenance"]],
   ["Pending & Issues", Wrench, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "supervisor", "quality", "maintenance", "sewing_coordinator"]],
   ["Sewing Delivery", Scissors, ["saas_super_admin", "company_admin", "admin", "production", "sewing_coordinator"]],
@@ -53,6 +52,12 @@ export default function MainLayout({ page, onPageChange, children }) {
   function selectPage(pageName) {
     onPageChange(pageName);
     setMenuOpen(false);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("elastic_production_scan_draft");
+    window.history.replaceState({}, "", "/");
+    logout();
   }
 
   return (
@@ -89,7 +94,7 @@ export default function MainLayout({ page, onPageChange, children }) {
             <b>{user?.name}</b>
             <small>{user?.role}</small>
           </div>
-          <button onClick={logout}>
+          <button onClick={handleLogout}>
             <LogOut />
           </button>
         </div>
@@ -104,7 +109,7 @@ export default function MainLayout({ page, onPageChange, children }) {
           </button>
           <div>
             <small>{user?.role?.includes("production") ? "Elastic Production" : "Accessories Flow SaaS"}</small>
-            <h1>{page}</h1>
+            <h1>{page === "Production Dashboard" ? "Dashboard" : page}</h1>
           </div>
         </header>
 

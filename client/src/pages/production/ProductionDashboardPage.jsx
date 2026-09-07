@@ -20,7 +20,7 @@ export default function ProductionDashboardPage() {
     ["Sewing Hold", data.counts.sewingHold, AlertTriangle],
   ];
   return <>
-    <PageTitle title="Production Dashboard" subtitle="Live machine, output and pending status" />
+    <PageTitle title="Dashboard" subtitle="Live machine, output and pending status" />
     <div className="stats">{cards.map(([label, value, Icon]) => <div className="stat" key={label}><div><span>{label}</span><b>{value}</b></div><i><Icon /></i></div>)}</div>
     <div className="dashboard-grid">
       <Card title="Machine availability">{data.machines.map((machine) => <div className="alert" key={machine._id}><div><b>{machine.machineCode} · {machine.machineName}</b><small>{machine.nextPlan || "No next plan"}</small></div><span>{machine.status}</span></div>)}</Card>

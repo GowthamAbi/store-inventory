@@ -225,6 +225,62 @@ export async function downloadDcPdf(report) {
   pdf.save(`${report.dcNo}-outward.pdf`);
 }
 
+async function createMasterQrPdf(kind, record) {
+  const isMachine = kind === "machine";
+  const code = isMachine ? record.machineCode : record.employeeCode;
+  const name = isMachine ? record.machineName : record.employeeName;
+  const link = `${window.location.origin}/production?${isMachine ? "machineCode" : "employeeCode"}=${encodeURIComponent(code)}`;
+  const qrData = await QRCode.toDataURL(link, { width: 700, margin: 2, errorCorrectionLevel: "H" });
+  const pdf = new jsPDF({ orientation: "portrait", format: "a5" });
+  const width = pdf.internal.pageSize.getWidth();
+
+  pdf.setFillColor(18, 92, 75);
+  pdf.rect(0, 0, width, 24, "F");
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(18);
+  pdf.text("Accessories Flow", width / 2, 10, { align: "center" });
+  pdf.setFontSize(10);
+  pdf.text(isMachine ? "MACHINE QR CARD" : "EMPLOYEE QR CARD", width / 2, 18, { align: "center" });
+  pdf.addImage(qrData, "PNG", width / 2 - 43, 34, 86, 86);
+  pdf.setTextColor(18, 60, 51);
+  pdf.setFontSize(17);
+  pdf.text(code, width / 2, 133, { align: "center" });
+  pdf.setFontSize(13);
+  pdf.text(name, width / 2, 143, { align: "center", maxWidth: width - 24 });
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(9);
+  const details = isMachine
+    ? [`Type: ${record.machineType || "-"}`, `Section: ${record.section || "-"}`, `Capacity / Hr: ${record.capacityPerHour || "-"}`]
+    : [`Employee No: ${code}`, `Department: ${record.department || "-"}`, `Section: ${record.section || "-"}`, `Shift: ${record.shift || "-"}`];
+  details.forEach((detail, index) => pdf.text(detail, width / 2, 154 + index * 7, { align: "center" }));
+  pdf.setFontSize(8);
+  pdf.setTextColor(90, 105, 100);
+  pdf.text("Scan this QR in Production Control", width / 2, 194, { align: "center" });
+  return { pdf, code };
+}
+
+export async function downloadMasterQrPdf(kind, record) {
+  const { pdf, code } = await createMasterQrPdf(kind, record);
+  pdf.save(`${kind}-${code}.pdf`);
+}
+
+export async function printMasterQrPdf(kind, record) {
+  const { pdf } = await createMasterQrPdf(kind, record);
+  const printFrame = document.createElement("iframe");
+  printFrame.style.position = "fixed";
+  printFrame.style.width = "1px";
+  printFrame.style.height = "1px";
+  printFrame.style.opacity = "0";
+  printFrame.src = pdf.output("bloburl");
+  document.body.appendChild(printFrame);
+  printFrame.onload = () => {
+    printFrame.contentWindow?.focus();
+    printFrame.contentWindow?.print();
+    window.setTimeout(() => printFrame.remove(), 3000);
+  };
+}
+
 export function printTransaction(targetId) {
   document.body.dataset.printTarget = targetId || "";
   window.requestAnimationFrame(() => {
