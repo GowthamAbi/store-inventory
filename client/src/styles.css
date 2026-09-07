@@ -1659,6 +1659,205 @@ td {
   white-space: nowrap;
   padding: 7px 9px;
 }
+.standalone-production-page {
+  min-height: 100vh;
+  padding: 18px;
+  background: #f2f7f5;
+}
+.standalone-production-page .title {
+  margin-top: 18px;
+}
+.standalone-production-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  max-width: 1180px;
+  margin: 0 auto;
+  color: #123c33;
+  font-size: 22px;
+  font-weight: 900;
+}
+.standalone-production-brand small {
+  color: #188267;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+.standalone-production-page > :not(.standalone-production-brand):not(.toast) {
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.gantt-legend {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 18px;
+  color: #526d65;
+}
+.gantt-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.gantt-legend small {
+  margin-left: auto;
+}
+.gantt-legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+.gantt-legend .production,
+.gantt-track .production {
+  background: #16a66a;
+}
+.gantt-legend .stopped,
+.gantt-track .stopped {
+  background: #e24b4b;
+}
+.machine-gantt {
+  min-width: 900px;
+  padding: 0 18px 18px;
+}
+.machine-gantt::before {
+  content: "";
+}
+.card:has(.machine-gantt) {
+  overflow-x: auto;
+}
+.gantt-hours,
+.gantt-machine-row {
+  display: grid;
+  grid-template-columns: 150px minmax(600px, 1fr) 125px;
+  align-items: stretch;
+}
+.gantt-hours {
+  color: #5d716b;
+  font-size: 11px;
+}
+.gantt-hours > b {
+  padding: 10px 8px;
+}
+.gantt-hours > div {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+}
+.gantt-hours span {
+  padding: 10px 0;
+  border-left: 1px solid #dce7e3;
+  text-align: center;
+}
+.gantt-machine-row {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid #e3ece9;
+  border-radius: 0;
+  background: white;
+  color: inherit;
+  text-align: left;
+}
+.gantt-machine-row:hover,
+.gantt-machine-row.selected {
+  background: #eef9f5;
+}
+.gantt-machine-name {
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  padding: 11px 8px;
+}
+.gantt-machine-name small {
+  overflow: hidden;
+  color: #71817c;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gantt-track {
+  position: relative;
+  min-height: 52px;
+  background: repeating-linear-gradient(to right, transparent 0, transparent calc(4.166% - 1px), #dce7e3 calc(4.166% - 1px), #dce7e3 4.166%);
+}
+.gantt-track i {
+  position: absolute;
+  top: 12px;
+  height: 27px;
+  min-width: 3px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
+}
+.machine-status {
+  align-self: center;
+  justify-self: center;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #eef2f1;
+  color: #546762;
+  font-size: 11px;
+  font-weight: 800;
+}
+.status-running,
+.status-available {
+  background: #def6e9;
+  color: #08784b;
+}
+.status-breakdown,
+.status-thread-change,
+.status-box-change,
+.status-size-change,
+.status-other-change {
+  background: #fee7e7;
+  color: #b42318;
+}
+.week-machine-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  color: #123c33;
+}
+.week-machine-heading div {
+  display: grid;
+  gap: 3px;
+}
+.week-machine-heading small {
+  color: #70817c;
+}
+.status-week-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: center;
+}
+.status-week-table th {
+  padding: 11px 8px;
+  background: #125c4b;
+  color: white;
+  white-space: nowrap;
+}
+.status-week-table td {
+  padding: 11px 8px;
+  border-bottom: 1px solid #e2ebe8;
+}
+.metric-positive {
+  color: #07834f;
+  font-weight: 900;
+}
+.metric-negative {
+  color: #d13131;
+  font-weight: 900;
+}
+.loading-state {
+  display: flex;
+  min-height: 260px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #526d65;
+  font-weight: 700;
+}
 .shade {
   display: none;
 }
@@ -1734,5 +1933,16 @@ td {
   .production-start-grid,
   .pending-form {
     grid-template-columns: 1fr;
+  }
+  .standalone-production-page {
+    padding: 14px 10px;
+  }
+  .gantt-legend {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .gantt-legend small {
+    width: 100%;
+    margin-left: 0;
   }
 }

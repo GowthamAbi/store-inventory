@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import LoginPage from "./pages/auth/LoginPage.jsx";
 import PublicOutwardPage from "./pages/outward/PublicOutwardPage.jsx";
 import AppRoutes from "./routes/AppRoutes.jsx";
+import ProductionControlPage from "./pages/production/ProductionControlPage.jsx";
 
 function Application() {
   const { token, user } = useAuth();
@@ -37,6 +38,15 @@ function Application() {
   }
 
   if (!token) return <LoginPage />;
+
+  const productionQrPage = window.location.pathname === "/production" && new URLSearchParams(window.location.search).toString();
+  if (productionQrPage) {
+    return <div className="standalone-production-page">
+      <div className="standalone-production-brand">Accessories Flow <small>PRODUCTION</small></div>
+      <ProductionControlPage notify={notify} />
+      {message && <div className="toast">{message}</div>}
+    </div>;
+  }
 
   return (
     <>

@@ -37,6 +37,7 @@ const navigation = [
   ["Production Masters", Settings2, ["saas_super_admin", "company_admin", "admin", "store", "production", "production_planner"]],
   ["Production Planning", ClipboardList, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "supervisor"]],
   ["Production Control", Activity, ["saas_super_admin", "company_admin", "admin", "production", "production_operator", "supervisor"]],
+  ["Status", Clock3, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance", "management", "view_only"]],
   ["Machine & Employee", Factory, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "maintenance"]],
   ["Pending & Issues", Wrench, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "supervisor", "quality", "maintenance", "sewing_coordinator"]],
   ["Sewing Delivery", Scissors, ["saas_super_admin", "company_admin", "admin", "production", "sewing_coordinator"]],

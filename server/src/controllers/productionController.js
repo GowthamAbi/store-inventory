@@ -13,9 +13,11 @@ import { generateReferenceNo } from "../utils/generateReferenceNo.js";
 const normalize = (value) => String(value || "").trim().toUpperCase();
 
 export async function getProductionSummary(_request, response) {
+  const statusHistoryFrom = new Date();
+  statusHistoryFrom.setDate(statusHistoryFrom.getDate() - 8);
   const [machines, jobs, pendingIssues, sewingDeliveries, plans, sewingHolds] = await Promise.all([
     Machine.find().sort({ machineCode: 1 }).lean(),
-    ProductionJob.find().sort({ createdAt: -1 }).limit(100).lean(),
+    ProductionJob.find({ startTime: { $gte: statusHistoryFrom } }).sort({ createdAt: -1 }).lean(),
     PendingIssue.find({ status: { $nin: ["Resolved", "Cancelled"] } }).sort({ priority: 1, createdAt: -1 }).lean(),
     SewingDelivery.find().sort({ deliveryDate: -1 }).limit(50).lean(),
     ProductionPlan.find().sort({ requiredDate: 1 }).limit(100).lean(),
