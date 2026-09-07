@@ -33,6 +33,15 @@ export async function getItemByCode(request, response) {
   response.json(await itemService.getItemByCode(request.params.itemCode));
 }
 
+export async function getItemByCodeAndColour(request, response) {
+  response.json(
+    await itemService.getItemByCodeAndColour(
+      request.query.itemCode,
+      request.query.colour,
+    ),
+  );
+}
+
 export async function createItem(request, response) {
   response.status(201).json(await itemService.createItem(request.body));
 }

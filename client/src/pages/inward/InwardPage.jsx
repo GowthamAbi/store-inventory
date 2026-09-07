@@ -64,7 +64,7 @@ export default function InwardPage({ notify }) {
       let item = null;
 
       try {
-        item = await getItem(itemCode);
+        item = await getItem(itemCode, matchingPO.colour || "");
       } catch (error) {
         if (!error.message.toLowerCase().includes("not found")) throw error;
       }
@@ -73,11 +73,11 @@ export default function InwardPage({ notify }) {
         itemCode,
         poNo,
         indentNo: matchingPO.indentNo || "",
-        brand: item?.brand || matchingPO.brand || "",
+        brand: matchingPO.brand || item?.brand || "",
         description:
-          item?.description || matchingPO.description || matchingPO.itemCode,
-        type: item?.type || matchingPO.type || "",
-        colour: item?.colour || matchingPO.colour || "",
+          matchingPO.description || item?.description || matchingPO.itemCode,
+        type: matchingPO.type || item?.type || "",
+        colour: matchingPO.colour || item?.colour || "",
         orderQty: matchingPO.orderQty,
         balanceQty: Math.max(0, matchingPO.orderQty - matchingPO.inwardQty),
         loading: false,

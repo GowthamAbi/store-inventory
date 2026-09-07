@@ -9,6 +9,12 @@ export const itemRepository = {
       ...(colour && { colour: colour.trim().toUpperCase() }),
     }).session(session),
 
+  findByCodeAndColour: (itemCode, colour) =>
+    Item.findOne({
+      itemCode: itemCode.trim().toUpperCase(),
+      colour: colour.trim().toUpperCase(),
+    }),
+
   create: (itemData) => Item.create(itemData),
 
   update: (itemId, itemData) =>

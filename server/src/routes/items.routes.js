@@ -3,6 +3,7 @@ import {
   createItem,
   deleteItem,
   getItemByCode,
+  getItemByCodeAndColour,
   getItems,
   getStockLots,
   updateItem,
@@ -14,6 +15,7 @@ const router = Router();
 
 router.get("/", asyncHandler(getItems));
 router.get("/stock-lots", asyncHandler(getStockLots));
+router.get("/lookup", asyncHandler(getItemByCodeAndColour));
 router.get("/:itemCode", asyncHandler(getItemByCode));
 router.post("/", validateItem, asyncHandler(createItem));
 router.put("/:itemId", validateItem, asyncHandler(updateItem));

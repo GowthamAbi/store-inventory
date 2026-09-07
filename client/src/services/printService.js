@@ -75,110 +75,153 @@ export async function downloadTransactionPdf(record) {
 
 export async function downloadDcPdf(report) {
   if (!report) return;
-  const pdf = new jsPDF({ orientation: "landscape" });
-  const columns = [12, 24, 58, 92, 163, 193, 218, 240];
-  const widths = [9, 31, 31, 67, 27, 22, 18, 42];
-  const headers = [
-    "S.No", "Outward No", "Inward No", "Item Description",
-    "Item Code", "Colour", "QR", "Quantity",
-  ];
-  const colours = [...new Set(report.entries.map((entry) => entry.colour || "UNSPECIFIED"))];
-  const qrItems = [{ label: "MAIN DC", colour: "" }, ...colours.map((colour) => ({ label: colour, colour }))];
-  const qrSize = qrItems.length > 7 ? 11 : 16;
-  const qrColumns = 7;
-  const qrRows = Math.ceil(qrItems.length / qrColumns);
-  const qrBlockHeight = qrRows * (qrSize + 7) + 5;
+  const pdf = new jsPDF({ orientation: "landscape", format: "a4" });
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const columns = [12, 27, 112, 157, 197, 224];
+  const widths = [15, 85, 45, 40, 27, 61];
+  const headers = ["S.No", "Description", "Item Code", "Colour", "QR", "Quantity"];
+  const manyRows = report.entries.length > 12;
+  const fontSize = manyRows ? 6 : 7.5;
+  const qrSize = manyRows ? 5.5 : 7.5;
+  const minimumRowHeight = manyRows ? 7 : 9.5;
 
-  function drawTableHeader(y, fontSize = 8) {
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(fontSize);
-    headers.forEach((header, index) => pdf.text(header, columns[index], y));
-    pdf.line(10, y + 3, 287, y + 3);
-    pdf.setFont("helvetica", "normal");
-    return y + 10;
-  }
+  const mainQrUrl = `${window.location.origin}/production?dcNo=${encodeURIComponent(report.dcNo)}`;
+  const mainQrData = await QRCode.toDataURL(mainQrUrl, {
+    width: 360,
+    margin: 1,
+    errorCorrectionLevel: "M",
+  });
+  const rowQrData = await Promise.all(
+    report.entries.map((entry) => {
+      const url =
+        `${window.location.origin}/production?dcNo=${encodeURIComponent(report.dcNo)}` +
+        `&outwardNo=${encodeURIComponent(entry.referenceNo || "")}` +
+        `&inwardNo=${encodeURIComponent(entry.inwardReference || "")}` +
+        `&colour=${encodeURIComponent(entry.colour || "")}`;
+      return QRCode.toDataURL(url, {
+        width: 260,
+        margin: 1,
+        errorCorrectionLevel: "M",
+      });
+    }),
+  );
 
+  pdf.setFillColor(18, 92, 75);
+  pdf.rect(0, 0, pageWidth, 5, "F");
+  pdf.setTextColor(18, 60, 51);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(19);
-  pdf.text("Accessories Flow", 15, 17);
-  pdf.setFontSize(13);
-  pdf.text("DC OUTWARD STATEMENT", 15, 27);
+  pdf.text("Accessories Flow", 14, 18);
   pdf.setFontSize(10);
-  pdf.text(`DC No: ${report.dcNo}`, 15, 38);
-  pdf.text(`Date: ${new Date(report.date).toLocaleDateString()}`, 100, 38);
-  pdf.text(`Item Name: ${report.itemNames.join(", ")}`, 15, 47, {
-    maxWidth: 125,
-  });
-  pdf.text(`Section Name: ${report.sectionNames.join(", ") || "-"}`, 150, 47, {
-    maxWidth: 130,
-  });
-  pdf.text("Size: __________________________", 15, 57);
+  pdf.setTextColor(70, 91, 85);
+  pdf.text("DC OUTWARD STATEMENT", 14, 27);
 
-  const rowQrSize = report.entries.length > 10 ? 5.5 : report.entries.length > 6 ? 7 : 9;
-  const rowQrData = await Promise.all(report.entries.map((entry) => {
-    const url = `${window.location.origin}/production?dcNo=${encodeURIComponent(report.dcNo)}` +
-      `&outwardNo=${encodeURIComponent(entry.referenceNo || "")}` +
-      `&inwardNo=${encodeURIComponent(entry.inwardReference || "")}` +
-      `&colour=${encodeURIComponent(entry.colour || "")}`;
-    return QRCode.toDataURL(url, { width: 240, margin: 1, errorCorrectionLevel: "M" });
-  }));
-  const preparedRows = report.entries.map((entry, index) => {
-    const values = [index + 1, entry.referenceNo, entry.inwardReference || "-", entry.description, entry.itemCode, entry.colour || "-", "", `${entry.quantity} ${entry.unit || ""}`];
-    const wrapped = values.map((value, columnIndex) => pdf.splitTextToSize(String(value), widths[columnIndex]));
-    return { wrapped, lineCount: Math.max(...wrapped.map((lines) => lines.length)), qr: rowQrData[index] };
-  });
-  const totalLines = preparedRows.reduce((sum, row) => sum + row.lineCount, 0) || 1;
-  const rowSpacing = preparedRows.length > 20 ? 0.7 : 1.2;
-  const lineHeight = Math.max(
-    0.75,
-    Math.min(4, (68 - qrBlockHeight - preparedRows.length * rowSpacing) / totalLines),
-  );
-  const tableFontSize = Math.max(4, Math.min(8, lineHeight * 2));
-  let y = drawTableHeader(68, tableFontSize);
-  pdf.setFontSize(tableFontSize);
+  pdf.addImage(mainQrData, "PNG", pageWidth / 2 - 13, 7, 26, 26);
+  pdf.setFontSize(6.5);
+  pdf.setTextColor(18, 60, 51);
+  pdf.text("MAIN DC QR", pageWidth / 2, 36, { align: "center" });
 
-  preparedRows.forEach(({ wrapped, lineCount, qr }) => {
-    const rowHeight = Math.max(lineCount * lineHeight + rowSpacing, rowQrSize + 1);
+  pdf.setFontSize(9);
+  pdf.text(`DC No: ${report.dcNo}`, 220, 17);
+  pdf.text(`Date: ${new Date(report.date).toLocaleDateString()}`, 220, 27);
+  pdf.setDrawColor(24, 130, 103);
+  pdf.setLineWidth(0.5);
+  pdf.line(12, 41, 285, 41);
+
+  pdf.setFillColor(244, 249, 247);
+  pdf.roundedRect(12, 45, 273, 12, 2, 2, "F");
+  pdf.setFontSize(8);
+  pdf.setTextColor(18, 60, 51);
+  pdf.text(`Item Name: ${report.itemNames.join(", ") || "-"}`, 16, 52, { maxWidth: 92 });
+  pdf.text(`Section: ${report.sectionNames.join(", ") || "-"}`, 112, 52, { maxWidth: 82 });
+  pdf.text("Size: __________________", 218, 52);
+
+  let y = 61;
+  const headerHeight = 9;
+  pdf.setFillColor(18, 92, 75);
+  pdf.rect(12, y, 273, headerHeight, "F");
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(7.5);
+  headers.forEach((header, index) => {
+    const center = columns[index] + widths[index] / 2;
+    pdf.text(header, center, y + 5.8, { align: "center" });
+  });
+  y += headerHeight;
+
+  pdf.setTextColor(25, 45, 40);
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(fontSize);
+  report.entries.forEach((entry, index) => {
+    const values = [
+      String(index + 1),
+      entry.description || entry.itemCode,
+      entry.itemCode || "-",
+      entry.colour || "-",
+      "",
+      `${entry.quantity} ${entry.unit || ""}`,
+    ];
+    const wrapped = values.map((value, columnIndex) =>
+      pdf.splitTextToSize(value, widths[columnIndex] - 4),
+    );
+    const textLines = Math.max(...wrapped.map((lines) => lines.length));
+    const rowHeight = Math.max(minimumRowHeight, textLines * 3.2 + 3);
+
+    if (index % 2 === 1) {
+      pdf.setFillColor(248, 251, 250);
+      pdf.rect(12, y, 273, rowHeight, "F");
+    }
+    pdf.setDrawColor(205, 220, 215);
+    pdf.rect(12, y, 273, rowHeight);
+    for (let columnIndex = 1; columnIndex < columns.length; columnIndex += 1) {
+      pdf.line(columns[columnIndex], y, columns[columnIndex], y + rowHeight);
+    }
     wrapped.forEach((lines, columnIndex) => {
-      if (columnIndex === 6) return;
-      const centered = columnIndex === 0 || columnIndex === 5 || columnIndex === 7;
-      pdf.text(lines, centered ? columns[columnIndex] + widths[columnIndex] / 2 : columns[columnIndex], y + lineHeight, {
-        lineHeightFactor: 1,
-        align: centered ? "center" : "left",
+      if (columnIndex === 4) return;
+      const center = columns[columnIndex] + widths[columnIndex] / 2;
+      pdf.text(lines, center, y + 4.3, {
+        align: "center",
+        lineHeightFactor: 1.05,
+        maxWidth: widths[columnIndex] - 4,
       });
     });
-    pdf.addImage(qr, "PNG", columns[6] + (widths[6] - rowQrSize) / 2, y + (rowHeight - rowQrSize) / 2, rowQrSize, rowQrSize);
-    pdf.line(10, y + rowHeight, 287, y + rowHeight);
+    pdf.addImage(
+      rowQrData[index],
+      "PNG",
+      columns[4] + (widths[4] - qrSize) / 2,
+      y + (rowHeight - qrSize) / 2,
+      qrSize,
+      qrSize,
+    );
     y += rowHeight;
   });
 
-  pdf.line(10, y, 287, y);
+  const totalHeight = 9;
+  pdf.setFillColor(231, 243, 239);
+  pdf.rect(12, y, 273, totalHeight, "F");
   pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(8.5);
+  pdf.text("TOTAL QUANTITY", 210, y + 5.8, { align: "right" });
+  pdf.text(String(report.totalQuantity), 277, y + 5.8, { align: "right" });
+  y += totalHeight + 5;
+
+  const footerY = Math.min(y, 168);
   pdf.setFontSize(8);
-  pdf.text(`Total: ${report.totalQuantity}`, 240, y + 5);
+  pdf.text("Remarks", 14, footerY);
+  pdf.setDrawColor(130, 150, 144);
+  pdf.line(14, footerY + 8, 283, footerY + 8);
+  pdf.line(14, footerY + 15, 283, footerY + 15);
 
-  let qrY = y + 8;
-  for (let index = 0; index < qrItems.length; index += 1) {
-    const item = qrItems[index];
-    const column = index % qrColumns;
-    const row = Math.floor(index / qrColumns);
-    const x = 14 + column * 39;
-    const currentY = qrY + row * (qrSize + 7);
-    const url = `${window.location.origin}/production?dcNo=${encodeURIComponent(report.dcNo)}${item.colour ? `&colour=${encodeURIComponent(item.colour)}` : ""}`;
-    const dataUrl = await QRCode.toDataURL(url, { width: 300, margin: 1, errorCorrectionLevel: "M" });
-    pdf.addImage(dataUrl, "PNG", x, currentY, qrSize, qrSize);
-    pdf.setFontSize(6.5);
-    pdf.text(item.label, x + qrSize / 2, currentY + qrSize + 3, { align: "center", maxWidth: 35 });
-  }
-
-  const footerY = Math.min(157, qrY + qrRows * (qrSize + 7) + 2);
-  pdf.setFontSize(9);
-  pdf.text("Remarks:", 15, footerY);
-  pdf.line(15, footerY + 9, 282, footerY + 9);
-  pdf.line(15, footerY + 17, 282, footerY + 17);
-  pdf.text("Prepared By", 25, footerY + 36);
-  pdf.text("Checked By", 125, footerY + 36);
-  pdf.text("Authorized By", 230, footerY + 36);
+  const signatureLineY = 195;
+  const signatures = [
+    [20, 82, "Prepared By"],
+    [117, 179, "Checked By"],
+    [215, 277, "Authorized By"],
+  ];
+  signatures.forEach(([startX, endX, label]) => {
+    pdf.line(startX, signatureLineY, endX, signatureLineY);
+    pdf.text(label, (startX + endX) / 2, signatureLineY + 5, { align: "center" });
+  });
   pdf.save(`${report.dcNo}-outward.pdf`);
 }
 

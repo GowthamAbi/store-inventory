@@ -10,6 +10,15 @@ export const itemService = {
     return item;
   },
 
+  getItemByCodeAndColour: async (itemCode, colour) => {
+    if (!itemCode?.trim() || !colour?.trim()) {
+      throw new ApiError(400, "Item Code and Colour are required");
+    }
+    const item = await itemRepository.findByCodeAndColour(itemCode, colour);
+    if (!item) throw new ApiError(404, "Item colour variant not found");
+    return item;
+  },
+
   createItem: (itemData) => itemRepository.create(itemData),
 
   updateItem: async (itemId, itemData) => {

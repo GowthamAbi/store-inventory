@@ -6,9 +6,16 @@ import PublicOutwardPage from "./pages/outward/PublicOutwardPage.jsx";
 import AppRoutes from "./routes/AppRoutes.jsx";
 
 function Application() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const adminRoles = ["saas_super_admin", "company_admin", "admin"];
   const [page, setPage] = useState(
-    window.location.pathname === "/production" ? "Production Control" : "Dashboard",
+    window.location.pathname === "/production"
+      ? "Production Control"
+      : adminRoles.includes(user?.role)
+        ? "Modules"
+        : user?.role?.includes("production")
+          ? "Production Dashboard"
+          : "Dashboard",
   );
   const [message, setMessage] = useState("");
 
@@ -22,7 +29,7 @@ function Application() {
   return (
     <>
       <MainLayout page={page} onPageChange={setPage}>
-        <AppRoutes page={page} notify={notify} />
+        <AppRoutes page={page} notify={notify} onPageChange={setPage} />
       </MainLayout>
 
       {message && <div className="toast">{message}</div>}

@@ -162,6 +162,10 @@ export default function PrintPage({ notify }) {
               <h2>Accessories Flow</h2>
               <p>DC Outward Statement</p>
             </div>
+            <div className="dc-header-main-qr">
+              <QRGenerator value={productionLink()} size={100} />
+              <b>Main DC QR</b>
+            </div>
             <div className="dc-meta">
               <b>DC No: {dcReport.dcNo}</b>
               <span>Date: {new Date(dcReport.date).toLocaleDateString()}</span>
@@ -177,8 +181,8 @@ export default function PrintPage({ notify }) {
               <thead>
                 <tr>
                   <th>S.No</th>
-                  <th>Outward No.</th>
-                  <th>Inward No.</th>
+                  <th className="view-only-column">Outward No.</th>
+                  <th className="view-only-column">Inward No.</th>
                   <th>Item Description</th>
                   <th>Item Code</th>
                   <th className="center-cell">Colour</th>
@@ -190,8 +194,8 @@ export default function PrintPage({ notify }) {
                 {dcReport.entries.map((entry, index) => (
                   <tr key={entry._id || entry.referenceNo}>
                     <td>{index + 1}</td>
-                    <td>{entry.referenceNo}</td>
-                    <td>{entry.inwardReference || "—"}</td>
+                    <td className="view-only-column">{entry.referenceNo}</td>
+                    <td className="view-only-column">{entry.inwardReference || "—"}</td>
                     <td>{entry.description}</td>
                     <td>{entry.itemCode}</td>
                     <td className="center-cell">{entry.colour || "—"}</td>
@@ -205,26 +209,16 @@ export default function PrintPage({ notify }) {
                 ))}
               </tbody>
               <tfoot>
-                <tr>
+                <tr className="screen-only-total">
                   <td colSpan="7">Total Quantity</td>
+                  <td>{dcReport.totalQuantity}</td>
+                </tr>
+                <tr className="print-only-total">
+                  <td colSpan="5">Total Quantity</td>
                   <td>{dcReport.totalQuantity}</td>
                 </tr>
               </tfoot>
             </table>
-          </div>
-          <div className="dc-production-qrs">
-            <div className="dc-main-qr">
-              <QRGenerator value={productionLink()} size={115} />
-              <b>Main DC QR</b>
-              <small>All colours - DC {dcReport.dcNo}</small>
-            </div>
-            {[...new Set(dcReport.entries.map((entry) => entry.colour || "UNSPECIFIED"))].map((colour) => (
-              <div className="dc-colour-qr" key={colour}>
-                <QRGenerator value={productionLink(colour)} size={100} />
-                <b>{colour}</b>
-                <small>Colour QR</small>
-              </div>
-            ))}
           </div>
           <div className="remarks">
             <b>Remarks:</b>

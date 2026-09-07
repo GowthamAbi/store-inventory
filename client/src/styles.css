@@ -185,6 +185,16 @@
   gap: 5px;
   text-align: right;
 }
+.dc-header-main-qr {
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  text-align: center;
+}
+.dc-header-main-qr b {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
 .manual-size {
   display: inline-block;
   min-width: 210px;
@@ -225,6 +235,9 @@
 }
 .dc-print tfoot td:first-child {
   text-align: right;
+}
+.print-only-total {
+  display: none;
 }
 .remarks {
   margin-top: 25px;
@@ -392,6 +405,10 @@
   .dc-print > header {
     padding-bottom: 8px;
   }
+  .dc-header-main-qr .qr-image {
+    width: 66px;
+    height: 66px;
+  }
   .dc-print table {
     margin-top: 10px;
   }
@@ -401,6 +418,13 @@
     line-height: 1.2;
     white-space: normal;
     overflow-wrap: anywhere;
+  }
+  .dc-print .view-only-column,
+  .dc-print .screen-only-total {
+    display: none !important;
+  }
+  .dc-print .print-only-total {
+    display: table-row;
   }
   .dc-row-qr {
     width: 48px;
@@ -452,6 +476,83 @@
   border: 1px solid var(--border, #d9e3df);
   border-radius: 12px;
   background: #f8fbfa;
+}
+
+.module-selection {
+  min-height: calc(100vh - 150px);
+  display: grid;
+  place-content: center;
+  gap: 34px;
+  padding: 30px;
+}
+.module-selection-heading {
+  text-align: center;
+}
+.module-selection-heading span,
+.module-card small {
+  color: #188267;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+.module-selection-heading h1 {
+  margin: 8px 0;
+  font-size: clamp(30px, 4vw, 48px);
+  color: #123c33;
+}
+.module-selection-heading p {
+  margin: 0;
+  color: #667b75;
+}
+.module-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 360px));
+  gap: 22px;
+}
+.module-card {
+  min-height: 285px;
+  display: grid;
+  align-content: space-between;
+  gap: 22px;
+  padding: 28px;
+  border: 1px solid #dce9e4;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 14px 40px rgba(15, 68, 56, 0.09);
+  text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.module-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 55px rgba(15, 68, 56, 0.16);
+}
+.module-card i {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  color: #fff;
+  background: #188267;
+}
+.production-module i {
+  background: #3157a4;
+}
+.module-card h2 {
+  margin: 5px 0;
+  font-size: 30px;
+}
+.module-card p {
+  margin: 0;
+  color: #667b75;
+  line-height: 1.6;
+}
+.module-card > b {
+  color: #188267;
+}
+@media (max-width: 760px) {
+  .module-selection-grid { grid-template-columns: 1fr; }
+  .module-selection { padding: 12px; }
 }
 
 .plan-line {

@@ -25,6 +25,7 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 
 const navigation = [
+  ["Modules", Sparkles, ["saas_super_admin", "company_admin", "admin"]],
   ["Dashboard", LayoutDashboard, ["saas_super_admin", "company_admin", "admin", "store", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"]],
   ["Inward", ArrowDownToLine, ["saas_super_admin", "company_admin", "admin", "store"]],
   ["PO", ShoppingCart, ["saas_super_admin", "company_admin", "admin", "store"]],

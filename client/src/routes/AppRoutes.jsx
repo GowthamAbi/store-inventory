@@ -16,10 +16,13 @@ import CompanyManagementPage from "../pages/auth/CompanyManagementPage.jsx";
 import ProductionPlanningPage from "../pages/production/ProductionPlanningPage.jsx";
 import ReportsPage from "../pages/reports/ReportsPage.jsx";
 import ProductionMasterPage from "../pages/master/ProductionMasterPage.jsx";
+import ModuleSelectionPage from "../pages/dashboard/ModuleSelectionPage.jsx";
 
-export default function AppRoutes({ page, notify }) {
+export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
   switch (page) {
+    case "Modules":
+      return <ModuleSelectionPage onSelect={onPageChange} />;
     case "Inward":
       return <InwardPage notify={notify} />;
     case "PO":
