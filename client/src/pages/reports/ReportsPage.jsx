@@ -24,7 +24,6 @@ export default function ReportsPage({ notify }) {
   const { user } = useAuth();
   const [filters, setFilters] = useState(initialFilters);
   const [data, setData] = useState(null);
-  const [trace, setTrace] = useState("");
   const [activeGroup, setActiveGroup] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -39,17 +38,6 @@ export default function ReportsPage({ notify }) {
   }
 
   useEffect(() => { load(); }, []);
-
-  async function traceSearch() {
-    if (!trace.trim()) return;
-    setLoading(true);
-    try {
-      const reportData = await api(`/reports/trace/${encodeURIComponent(trace.trim())}`);
-      setData(reportData);
-      setActiveGroup(Object.keys(reportData).find((key) => reportData[key]?.length) || Object.keys(reportData)[0] || "");
-      notify("Complete traceability loaded");
-    } finally { setLoading(false); }
-  }
 
   const allRows = useMemo(() => Object.entries(data || {}).flatMap(([type, entries]) => entries.map((row) => ({ reportType: groups[type] || type, ...row }))), [data]);
   const filterOptions = useMemo(() => ({
@@ -66,15 +54,14 @@ export default function ReportsPage({ notify }) {
   })) : [];
 
   return <>
-    <PageTitle title="Reports & Traceability" subtitle={`${roleScope} · searchable, filterable and Excel-ready`} />
+    <PageTitle title="Reports" subtitle={`${roleScope} · date range, dropdown filters and Excel download`} />
     <div className="report-summary-grid">
       <div><Layers3 /><span><b>{Object.keys(data || {}).length}</b><small>Report Sections</small></span></div>
       <div><FileSearch /><span><b>{allRows.length}</b><small>Matching Records</small></span></div>
       <div><RefreshCw /><span><b>{loading ? "Loading" : "Ready"}</b><small>Report Status</small></span></div>
     </div>
-    <Card title="Complete Traceability"><div className="search-row report-trace-search"><input value={trace} onChange={(event) => setTrace(event.target.value)} placeholder="QR / PO / DC / Item / Colour" /><button className="primary" disabled={loading} onClick={traceSearch}><FileSearch /> Trace Search</button></div></Card>
-    <Card title="Report Filters"><form className="report-filters professional-report-filters" onSubmit={load}>
-      {["from", "to", "po", "dc", "item"].map((key) => <label key={key}><span>{key === "po" ? "PO No" : key === "dc" ? "DC No" : key}</span><input type={["from", "to"].includes(key) ? "date" : "text"} value={filters[key]} onChange={(event) => setFilters({ ...filters, [key]: event.target.value })} /></label>)}
+    <Card title="Date Range & Report Filters"><form className="report-filters professional-report-filters" onSubmit={load}>
+      {["from", "to", "po", "dc", "item"].map((key) => <label key={key}><span>{key === "from" ? "From Date" : key === "to" ? "To Date" : key === "po" ? "PO No" : key === "dc" ? "DC No" : key}</span><input type={["from", "to"].includes(key) ? "date" : "text"} value={filters[key]} onChange={(event) => setFilters({ ...filters, [key]: event.target.value })} /></label>)}
       {["colour", "machine", "employee", "status"].map((key) => <label key={key}><span>{key}</span><select value={filters[key]} onChange={(event) => setFilters({ ...filters, [key]: event.target.value })}><option value="">All {key}</option>{filterOptions[key].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>)}
       <div className="report-filter-actions"><button type="button" onClick={() => { setFilters(initialFilters); load(null, initialFilters); }}>Reset</button><button className="primary" disabled={loading}>{loading ? "Loading..." : "Apply Filters"}</button></div>
     </form></Card>

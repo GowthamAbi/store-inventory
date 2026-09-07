@@ -58,6 +58,7 @@ export default function AppRoutes({ page, notify, onPageChange }) {
       return <UserManagementPage notify={notify} />;
     case "SaaS Companies":
       return <CompanyManagementPage notify={notify} />;
+    case "Reports":
     case "Reports & Traceability":
       return <ReportsPage notify={notify} />;
     default:

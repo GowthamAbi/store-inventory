@@ -41,7 +41,7 @@ const navigation = [
   ["Machine & Employee", Factory, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "maintenance"]],
   ["Pending & Issues", Wrench, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "supervisor", "quality", "maintenance", "sewing_coordinator"]],
   ["Sewing Delivery", Scissors, ["saas_super_admin", "company_admin", "admin", "production", "sewing_coordinator"]],
-  ["Reports & Traceability", BarChart3, ["saas_super_admin", "company_admin", "admin", "store", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"]],
+  ["Reports", BarChart3, ["saas_super_admin", "company_admin", "admin", "store", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"]],
   ["User Management", Users, ["saas_super_admin", "company_admin", "admin"]],
   ["SaaS Companies", Building2, ["saas_super_admin"]],
 ];
