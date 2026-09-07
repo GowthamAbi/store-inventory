@@ -14,6 +14,21 @@ function dateFilter(query) {
   return { createdAt: { ...(query.from && { $gte: new Date(query.from) }), ...(query.to && { $lte: new Date(`${query.to}T23:59:59.999Z`) }) } };
 }
 
+const ADMIN_ROLES = ["saas_super_admin", "company_admin", "admin"];
+const STORE_KEYS = ["pos", "inwards", "outwards"];
+const PRODUCTION_KEYS = ["plans", "jobs", "pending", "sewing", "sewingHolds"];
+
+function allowedReportKeys(role) {
+  if (ADMIN_ROLES.includes(role)) return [...STORE_KEYS, ...PRODUCTION_KEYS];
+  if (role === "store") return STORE_KEYS;
+  return PRODUCTION_KEYS;
+}
+
+function scopeReports(reports, role) {
+  const allowed = new Set(allowedReportKeys(role));
+  return Object.fromEntries(Object.entries(reports).filter(([key]) => allowed.has(key)));
+}
+
 export async function getReports(request, response) {
   const common = dateFilter(request.query);
   const [pos, inwards, outwards, plans, jobs, pending, sewing, sewingHolds] = await Promise.all([
@@ -26,7 +41,7 @@ export async function getReports(request, response) {
     SewingDelivery.find({ ...common }).lean(),
     SewingHold.find({ ...common }).lean(),
   ]);
-  response.json({ pos, inwards, outwards, plans, jobs, pending, sewing, sewingHolds });
+  response.json(scopeReports({ pos, inwards, outwards, plans, jobs, pending, sewing, sewingHolds }, request.user?.role));
 }
 
 export async function getTraceability(request, response) {
@@ -41,5 +56,5 @@ export async function getTraceability(request, response) {
     PendingIssue.find({ $or: [{ issueNo: match }, { outwardNo: match }, { itemCode: match }, { colour: match }] }).lean(),
     SewingDelivery.find({ $or: [{ deliveryNo: match }, { outwardNo: match }, { colour: match }] }).lean(),
   ]);
-  response.json({ pos, inwards, outwards, plans, jobs, pending, sewing });
+  response.json(scopeReports({ pos, inwards, outwards, plans, jobs, pending, sewing }, request.user?.role));
 }

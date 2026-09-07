@@ -20,6 +20,10 @@ const productionJobSchema = new mongoose.Schema(
     section: { type: String, required: true },
     colour: { type: String, required: true, uppercase: true },
     size: { type: String, required: true, uppercase: true },
+    sizePlan: [{
+      size: { type: String, required: true, uppercase: true, trim: true },
+      plannedPcs: { type: Number, required: true, min: 1 },
+    }],
     plannedPcs: { type: Number, required: true, min: 1 },
     machineCode: { type: String, required: true, uppercase: true },
     employeeCode: { type: String, required: true, uppercase: true },

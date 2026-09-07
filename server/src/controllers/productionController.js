@@ -152,8 +152,13 @@ export async function startJob(request, response) {
   }
   const outwardNo = outward.outwardNo;
   const productionDcNo = outward.dcNo;
-  const plannedPcs = Number(request.body.plannedPcs);
-  if (!Number.isFinite(plannedPcs) || plannedPcs <= 0) throw new ApiError(400, "Valid planned pieces are required");
+  const sizes = String(request.body.size || "").split(",").map(normalize).filter(Boolean);
+  const pieceValues = String(request.body.plannedPcs || "").split(",").map((value) => Number(value.trim()));
+  if (!sizes.length) throw new ApiError(400, "At least one size is required");
+  if (sizes.length !== pieceValues.length) throw new ApiError(400, "Each size must have one matching PCS quantity");
+  if (pieceValues.some((value) => !Number.isFinite(value) || value <= 0)) throw new ApiError(400, "Every planned PCS quantity must be greater than zero");
+  const sizePlan = sizes.map((size, index) => ({ size, plannedPcs: pieceValues[index] }));
+  const plannedPcs = pieceValues.reduce((sum, value) => sum + value, 0);
 
   const job = await ProductionJob.create({
     jobNo: generateReferenceNo("PRD"),
@@ -163,7 +168,8 @@ export async function startJob(request, response) {
     itemName: outward.itemName,
     section: request.body.section || outward.section || "Elastic Production",
     colour: requestedColour,
-    size: normalize(request.body.size),
+    size: sizes.join(", "),
+    sizePlan,
     plannedPcs,
     planNo: normalize(request.body.planNo),
     shift: request.body.shift || "General",
