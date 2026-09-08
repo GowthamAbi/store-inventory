@@ -4,7 +4,7 @@ import { getProductionSummary } from "../../api/productionApi.js";
 import Card from "../../components/common/Card.jsx";
 import PageTitle from "../../components/common/PageTitle.jsx";
 
-const STOP_STATUSES = ["Breakdown", "Thread Change", "Box Change", "Size Change", "Other Change"];
+const STOP_STATUSES = ["Breakdown", "Thread Change", "Bobbin Change", "Box Change", "Size Change", "Other Change"];
 
 function startOfDay(date) {
   const value = new Date(date);

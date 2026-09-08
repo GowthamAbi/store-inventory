@@ -281,6 +281,21 @@ export async function printMasterQrPdf(kind, record) {
   };
 }
 
+export async function downloadSectionQrPdf(record) {
+  const link = `${window.location.origin}/production?sectionCode=${encodeURIComponent(record.code)}`;
+  const qrData = await QRCode.toDataURL(link, { width: 700, margin: 2, errorCorrectionLevel: "H" });
+  const pdf = new jsPDF({ orientation: "portrait", format: "a5" });
+  const width = pdf.internal.pageSize.getWidth();
+  pdf.setFillColor(18, 92, 75); pdf.rect(0, 0, width, 25, "F");
+  pdf.setTextColor(255, 255, 255); pdf.setFont("helvetica", "bold"); pdf.setFontSize(18);
+  pdf.text("Accessories Flow", width / 2, 11, { align: "center" });
+  pdf.setFontSize(10); pdf.text("SECTION QR CARD", width / 2, 19, { align: "center" });
+  pdf.addImage(qrData, "PNG", width / 2 - 43, 36, 86, 86);
+  pdf.setTextColor(18, 60, 51); pdf.setFontSize(18); pdf.text(record.name, width / 2, 138, { align: "center" });
+  pdf.setFontSize(13); pdf.text(`Section Code: ${record.code}`, width / 2, 150, { align: "center" });
+  pdf.save(`section-${record.code}.pdf`);
+}
+
 export function printTransaction(targetId) {
   document.body.dataset.printTarget = targetId || "";
   window.requestAnimationFrame(() => {

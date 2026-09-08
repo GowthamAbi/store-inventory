@@ -5,6 +5,7 @@ import LoginPage from "./pages/auth/LoginPage.jsx";
 import PublicOutwardPage from "./pages/outward/PublicOutwardPage.jsx";
 import AppRoutes from "./routes/AppRoutes.jsx";
 import ProductionControlPage from "./pages/production/ProductionControlPage.jsx";
+import GlobalFeedback from "./components/common/GlobalFeedback.jsx";
 
 function Application() {
   const { token, user } = useAuth();
@@ -63,11 +64,12 @@ export default function App() {
   const inwardNo = new URLSearchParams(window.location.search).get("inwardNo");
 
   if (window.location.pathname === "/outward" && inwardNo) {
-    return <PublicOutwardPage inwardNo={inwardNo} />;
+    return <><GlobalFeedback /><PublicOutwardPage inwardNo={inwardNo} /></>;
   }
 
   return (
     <AuthProvider>
+      <GlobalFeedback />
       <Application />
     </AuthProvider>
   );

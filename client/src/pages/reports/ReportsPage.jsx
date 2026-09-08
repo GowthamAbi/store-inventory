@@ -11,6 +11,7 @@ const groups = {
   pos: "Purchase Orders", inwards: "Inwards", outwards: "Outwards",
   plans: "Production Plans", jobs: "Production", pending: "Pending & Issues",
   sewing: "Sewing Delivery", sewingHolds: "Sewing Holds",
+  warehouse: "Warehouse Stock",
 };
 const initialFilters = { from: "", to: "", po: "", dc: "", item: "", colour: "", machine: "", employee: "", status: "" };
 const hiddenFields = ["__v", "companyId", "factoryId", "password"];

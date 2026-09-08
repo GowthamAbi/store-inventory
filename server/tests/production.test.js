@@ -9,6 +9,9 @@ test("production MVC modules exist", async () => {
     access(new URL("../src/models/ProductionJob.js", import.meta.url)),
     access(new URL("../src/models/PendingIssue.js", import.meta.url)),
     access(new URL("../src/models/SewingDelivery.js", import.meta.url)),
+    access(new URL("../src/models/WarehouseStock.js", import.meta.url)),
+    access(new URL("../src/controllers/warehouseController.js", import.meta.url)),
+    access(new URL("../src/routes/warehouse.routes.js", import.meta.url)),
   ]);
   assert.ok(true);
 });

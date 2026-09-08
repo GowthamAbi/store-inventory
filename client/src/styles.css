@@ -5,6 +5,15 @@
   font-synthesis: none;
 }
 
+/* Production workflow feedback and warehouse */
+.dc-ready-summary{display:grid;gap:8px;margin:14px 0 0;padding:14px;border:1px solid #a9d8c8;border-radius:12px;background:#effaf6}.dc-ready-summary>span{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:8px;background:#fff;color:#526d65}.dc-ready-summary strong{color:#08784b;white-space:nowrap}.dc-ready-summary button{margin-top:4px}
+.global-loading-overlay{position:fixed;z-index:2000;inset:0;display:grid;place-items:center;background:rgba(3,20,16,.62);backdrop-filter:blur(2px);pointer-events:all}.global-loading-overlay>div{display:grid;min-width:170px;justify-items:center;gap:7px;padding:24px;border-radius:18px;background:#fff;color:#123c33;box-shadow:0 22px 70px rgba(0,0,0,.28)}.global-loading-overlay svg{width:34px;height:34px;color:#188267}.global-loading-overlay small{color:#71817c}
+.global-error-backdrop{position:fixed;z-index:2100;inset:0;display:grid;place-items:center;padding:18px;background:rgba(3,20,16,.72)}.global-error-popup{width:min(92vw,410px);padding:26px;border-radius:20px;background:#fff;text-align:center;box-shadow:0 25px 75px rgba(0,0,0,.32)}.global-error-popup>svg{width:44px;height:44px;color:#d43c32}.global-error-popup h3{margin:10px 0 7px;color:#8e241d}.global-error-popup p{color:#5e716b;line-height:1.5}.global-error-popup button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:120px}
+.machine-control-standalone{max-width:780px;margin:0 auto}.machine-live-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:18px}.machine-live-summary>div{display:grid;gap:4px;padding:14px;border-radius:12px;background:#f0f8f5}.machine-live-summary small{color:#6e817b}.machine-live-summary b{color:#123c33}.machine-action-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:0 18px 20px}.machine-action-grid button,.machine-resume-button{min-height:64px;border:1px solid #edb8b3;border-radius:13px;background:#fff1f0;color:#9f2d25;font-size:16px;font-weight:800}.machine-action-grid .complete-action,.machine-resume-button{border-color:#188267;background:#188267;color:#fff}.machine-resume-button{width:calc(100% - 36px);margin:0 18px 20px}.size-completion-form{padding:18px}.size-completion-row{display:grid;grid-template-columns:100px repeat(3,1fr);gap:10px;align-items:end;padding:12px 0;border-bottom:1px solid #e3ece9}.size-completion-row>small{grid-column:1}.size-completion-row label span,.warehouse-action-form label span{display:block;margin-bottom:5px;color:#657973;font-size:12px;font-weight:700}.size-completion-row input,.warehouse-action-form input{width:100%;padding:10px;border:1px solid #ccdcd7;border-radius:9px}
+.production-measure-line{grid-template-columns:1fr .7fr .7fr 1fr .8fr auto}.production-measure-line output{align-self:center;padding:9px;border-radius:8px;background:#eaf8f3;color:#08734f;font-weight:800;text-align:center}
+.warehouse-tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px}.warehouse-tabs button{white-space:nowrap;padding:10px 14px;border:1px solid #d1e0dc;border-radius:999px;background:#fff;color:#546b64}.warehouse-tabs button.active{border-color:#188267;background:#188267;color:#fff}.warehouse-summary{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding:18px;border-radius:15px;background:linear-gradient(135deg,#123d35,#176d59);color:#fff}.warehouse-summary>svg{width:34px;height:34px}.warehouse-summary>div:not(.warehouse-dc-search){display:grid;min-width:150px}.warehouse-summary b{font-size:24px}.warehouse-dc-search{display:flex;align-items:end;gap:8px;margin-left:auto}.warehouse-dc-search .qr-scan-field>span{color:#d8ebe5}.warehouse-dc-search input{min-width:180px}.warehouse-actions{display:flex;gap:5px}.warehouse-actions button{padding:6px 8px;white-space:nowrap}.warehouse-modal-backdrop{position:fixed;z-index:1200;inset:0;display:grid;place-items:center;padding:18px;background:rgba(3,20,16,.72)}.warehouse-modal-backdrop>.card{width:min(94vw,620px);max-height:90vh;overflow-y:auto}.warehouse-action-form{display:grid;gap:14px;padding:18px}
+@media(max-width:720px){.machine-live-summary,.machine-action-grid,.size-completion-row{grid-template-columns:1fr}.size-completion-row>small{grid-column:auto}.warehouse-summary,.warehouse-dc-search{align-items:stretch;flex-direction:column}.warehouse-dc-search{width:100%;margin-left:0}.production-measure-line{grid-template-columns:1fr}}
+
 /* Blocks every click while one or more API requests are running. */
 .global-loader {
   position: fixed;
@@ -1865,11 +1874,26 @@ td {
 }
 .status-breakdown,
 .status-thread-change,
+.status-bobbin-change,
 .status-box-change,
 .status-size-change,
 .status-other-change {
   background: #fee7e7;
   color: #b42318;
+}
+
+/* Keep the six production-planning inputs aligned after the generic plan rule. */
+.plan-line.production-measure-line {
+  grid-template-columns: 1fr .7fr .7fr 1fr .8fr auto;
+}
+
+@media (max-width: 720px) {
+  .plan-line.production-measure-line {
+    grid-template-columns: 1fr;
+  }
+  .plan-line.production-measure-line button {
+    grid-column: auto;
+  }
 }
 .week-machine-heading {
   display: flex;

@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const sizeLineSchema = new mongoose.Schema({
   size: { type: String, required: true, uppercase: true },
   requiredPcs: { type: Number, required: true, min: 1 },
+  measurement: { type: Number, required: true, min: 0.0001 },
   requiredMtr: { type: Number, default: 0, min: 0 },
   producedPcs: { type: Number, default: 0, min: 0 },
   status: { type: String, enum: ["Not Started", "Running", "Partial", "Complete", "Material Pending", "Rework Pending", "Rejected", "On Hold"], default: "Not Started" },

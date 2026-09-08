@@ -7,6 +7,7 @@ import ProductionJob from "../models/ProductionJob.js";
 import SewingDelivery from "../models/SewingDelivery.js";
 import SewingHold from "../models/SewingHold.js";
 import ProductionPlan from "../models/ProductionPlan.js";
+import WarehouseStock from "../models/WarehouseStock.js";
 import ApiError from "../utils/ApiError.js";
 import { generateReferenceNo } from "../utils/generateReferenceNo.js";
 
@@ -57,12 +58,29 @@ export async function savePlan(request, response) {
     colours: (request.body.colours || []).map((line) => ({
       ...line,
       colour: normalize(line.colour),
-      sizes: (line.sizes || []).map((size) => ({ ...size, size: normalize(size.size) })),
+      sizes: (line.sizes || []).map((size) => ({
+        ...size,
+        size: normalize(size.size),
+        requiredPcs: Number(size.requiredPcs),
+        measurement: Number(size.measurement),
+        requiredMtr: Number(size.requiredPcs) * Number(size.measurement),
+      })),
     })),
     createdBy: request.user?.name || "Planner",
   };
   if (!data.colours.length || data.colours.some((line) => !line.colour || !line.sizes.length)) {
     throw new ApiError(400, "At least one colour and size plan is required");
+  }
+  const sizeCount = data.colours.reduce((sum, line) => sum + line.sizes.length, 0);
+  if (sizeCount > 10) throw new ApiError(400, "Maximum 10 size lines are allowed per plan");
+  if (data.colours.some((line) => line.sizes.some((size) => !size.size || size.requiredPcs <= 0 || size.measurement <= 0))) {
+    throw new ApiError(400, "Every size needs valid PCS and measurement");
+  }
+  const outwardRows = await Outward.find({ dcNo: data.dcNo, itemCode: data.itemCode }).lean();
+  for (const colourLine of data.colours) {
+    const availableMtr = outwardRows.filter((row) => normalize(row.colour) === colourLine.colour).reduce((sum, row) => sum + Number(row.quantity || 0), 0);
+    const wantedMtr = colourLine.sizes.reduce((sum, size) => sum + size.requiredMtr, 0);
+    if (wantedMtr > availableMtr) throw new ApiError(409, `${colourLine.colour}: wanted ${wantedMtr.toFixed(2)} MTR, but outward has only ${availableMtr.toFixed(2)} MTR`);
   }
   const plan = request.params.id
     ? await ProductionPlan.findByIdAndUpdate(request.params.id, data, { new: true, runValidators: true })
@@ -188,13 +206,24 @@ export async function stopJob(request, response) {
   if (!job) throw new ApiError(404, "Production job not found");
   const machine = await Machine.findOne({ machineCode: job.machineCode });
   const action = request.body.action;
-  const allowed = ["Complete", "Breakdown", "Thread Change", "Box Change", "Size Change", "Other Change"];
+  const allowed = ["Complete", "Breakdown", "Thread Change", "Bobbin Change", "Box Change", "Size Change", "Other Change"];
   if (!allowed.includes(action)) throw new ApiError(400, "Select a valid stop action");
 
   if (action === "Complete") {
-    const ok = Number(request.body.okPcs || 0);
-    const rework = Number(request.body.reworkPcs || 0);
-    const rejection = Number(request.body.rejectionPcs || 0);
+    const sizeResults = (request.body.sizeResults?.length ? request.body.sizeResults : [{ size: job.size, okPcs: request.body.okPcs, reworkPcs: request.body.reworkPcs, rejectionPcs: request.body.rejectionPcs }]).map((row) => ({
+      size: normalize(row.size), okPcs: Number(row.okPcs || 0), reworkPcs: Number(row.reworkPcs || 0), rejectionPcs: Number(row.rejectionPcs || 0),
+    }));
+    for (const result of sizeResults) {
+      if ([result.okPcs, result.reworkPcs, result.rejectionPcs].some((value) => !Number.isFinite(value) || value < 0)) throw new ApiError(400, `${result.size}: quantities cannot be negative`);
+      const sizePlan = job.sizePlan.find((line) => normalize(line.size) === result.size);
+      if (sizePlan) {
+        const previous = job.completionBySize.filter((line) => normalize(line.size) === result.size).reduce((sum, line) => sum + line.okPcs + line.reworkPcs + line.rejectionPcs, 0);
+        if (result.okPcs + result.reworkPcs + result.rejectionPcs > sizePlan.plannedPcs - previous) throw new ApiError(400, `${result.size}: output exceeds size balance`);
+      }
+    }
+    const ok = sizeResults.reduce((sum, row) => sum + row.okPcs, 0);
+    const rework = sizeResults.reduce((sum, row) => sum + row.reworkPcs, 0);
+    const rejection = sizeResults.reduce((sum, row) => sum + row.rejectionPcs, 0);
     if (ok + rework + rejection > job.balancePcs) throw new ApiError(400, "Output exceeds production balance");
     job.okPcs += ok;
     job.reworkPcs += rework;
@@ -203,7 +232,18 @@ export async function stopJob(request, response) {
     job.status = job.balancePcs === 0 ? "Completed" : "Partially Completed";
     job.stopTime = new Date();
     job.remarks = request.body.remarks || "";
+    job.completionBySize.push(...sizeResults);
     if (machine) machine.status = "Available";
+    const warehouseRows = sizeResults.flatMap((row) => [
+      ["PRODUCTION_READY", "RDY", row.okPcs], ["REWORK", "RW", row.reworkPcs], ["REJECTION", "REJ", row.rejectionPcs],
+    ].filter(([, , quantity]) => quantity > 0).map(([warehouseType, prefix, quantity]) => ({
+      referenceNo: generateReferenceNo(prefix), warehouseType, jobNo: job.jobNo,
+      dcNo: job.dcNo, outwardNo: job.outwardNo, itemCode: job.itemCode,
+      itemName: job.itemName, colour: job.colour, size: row.size,
+      originalQty: quantity, balanceQty: quantity,
+      createdBy: request.user?.name || "Production User",
+    })));
+    if (warehouseRows.length) await WarehouseStock.insertMany(warehouseRows);
   } else {
     job.status = action;
     job.events.push({ type: action, reason: request.body.reason || "", startTime: new Date() });

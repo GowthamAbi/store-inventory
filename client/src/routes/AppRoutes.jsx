@@ -18,6 +18,7 @@ import ReportsPage from "../pages/reports/ReportsPage.jsx";
 import ProductionMasterPage from "../pages/master/ProductionMasterPage.jsx";
 import ModuleSelectionPage from "../pages/dashboard/ModuleSelectionPage.jsx";
 import MachineStatusPage from "../pages/production/MachineStatusPage.jsx";
+import WarehousePage from "../pages/production/WarehousePage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
@@ -44,6 +45,14 @@ export default function AppRoutes({ page, notify, onPageChange }) {
       return <ProductionControlPage notify={notify} />;
     case "Status":
       return <MachineStatusPage />;
+    case "Production Ready":
+      return <WarehousePage initialType="PRODUCTION_READY" notify={notify} />;
+    case "Rework Warehouse":
+      return <WarehousePage initialType="REWORK" notify={notify} />;
+    case "Rejection Warehouse":
+      return <WarehousePage initialType="REJECTION" notify={notify} />;
+    case "Section Delivery":
+      return <WarehousePage initialType="SECTION_DELIVERY" notify={notify} />;
     case "Production Planning":
       return <ProductionPlanningPage notify={notify} />;
     case "Production Dashboard":

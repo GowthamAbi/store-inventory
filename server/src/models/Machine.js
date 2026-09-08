@@ -9,7 +9,7 @@ const machineSchema = new mongoose.Schema(
     capacityPerHour: { type: Number, default: 0, min: 0 },
     status: {
       type: String,
-      enum: ["Available", "Running", "Breakdown", "Thread Change", "Box Change", "Size Change", "Other Change"],
+      enum: ["Available", "Running", "Breakdown", "Thread Change", "Bobbin Change", "Box Change", "Size Change", "Other Change"],
       default: "Available",
     },
     nextPlan: { type: String, default: "" },

@@ -6,6 +6,7 @@ import ProductionJob from "../models/ProductionJob.js";
 import PendingIssue from "../models/PendingIssue.js";
 import SewingDelivery from "../models/SewingDelivery.js";
 import SewingHold from "../models/SewingHold.js";
+import WarehouseStock from "../models/WarehouseStock.js";
 
 const rx = (value) => ({ $regex: String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" });
 
@@ -16,7 +17,7 @@ function dateFilter(query) {
 
 const ADMIN_ROLES = ["saas_super_admin", "company_admin", "admin"];
 const STORE_KEYS = ["pos", "inwards", "outwards"];
-const PRODUCTION_KEYS = ["plans", "jobs", "pending", "sewing", "sewingHolds"];
+const PRODUCTION_KEYS = ["plans", "jobs", "pending", "sewing", "sewingHolds", "warehouse"];
 
 function allowedReportKeys(role) {
   if (ADMIN_ROLES.includes(role)) return [...STORE_KEYS, ...PRODUCTION_KEYS];
@@ -31,7 +32,7 @@ function scopeReports(reports, role) {
 
 export async function getReports(request, response) {
   const common = dateFilter(request.query);
-  const [pos, inwards, outwards, plans, jobs, pending, sewing, sewingHolds] = await Promise.all([
+  const [pos, inwards, outwards, plans, jobs, pending, sewing, sewingHolds, warehouse] = await Promise.all([
     PurchaseOrder.find({ ...common, ...(request.query.po && { poNo: rx(request.query.po) }) }).lean(),
     Inward.find({ ...common, ...(request.query.item && { itemCode: rx(request.query.item) }) }).lean(),
     Outward.find({ ...common, ...(request.query.dc && { dcNo: rx(request.query.dc) }), ...(request.query.colour && { colour: rx(request.query.colour) }) }).lean(),
@@ -40,8 +41,9 @@ export async function getReports(request, response) {
     PendingIssue.find({ ...common }).lean(),
     SewingDelivery.find({ ...common }).lean(),
     SewingHold.find({ ...common }).lean(),
+    WarehouseStock.find({ ...common }).lean(),
   ]);
-  response.json(scopeReports({ pos, inwards, outwards, plans, jobs, pending, sewing, sewingHolds }, request.user?.role));
+  response.json(scopeReports({ pos, inwards, outwards, plans, jobs, pending, sewing, sewingHolds, warehouse }, request.user?.role));
 }
 
 export async function getTraceability(request, response) {

@@ -20,3 +20,6 @@ export const createSewingDelivery = (data) => request("/production/sewing", { me
 export const getSewingHolds = () => request("/production/sewing-holds");
 export const saveSewingHold = (data) => request("/production/sewing-holds", { method: "POST", body: JSON.stringify(data) });
 export const resolveSewingHold = (id, status = "Resolved") => request(`/production/sewing-holds/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
+export const getWarehouse = (type = "", dcNo = "") => request(`/warehouse?${new URLSearchParams({ ...(type && { type }), ...(dcNo && { dcNo }) })}`);
+export const transferRework = (id, data) => request(`/warehouse/rework/${id}`, { method: "POST", body: JSON.stringify(data) });
+export const deliverWarehouseStock = (id, data) => request(`/warehouse/deliver/${id}`, { method: "POST", body: JSON.stringify(data) });
