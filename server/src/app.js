@@ -8,8 +8,12 @@ import {
   errorHandler,
   notFoundHandler,
 } from "./middleware/errorHandler.js";
+import { securityHeaders } from "./middleware/securityMiddleware.js";
 
 const app = express();
+app.set("trust proxy", 1);
+app.disable("x-powered-by");
+app.use(securityHeaders);
 
 // ==========================================
 // CORS
@@ -85,6 +89,9 @@ app.use(
 app.use(
   express.json({
     limit: "10mb",
+    verify(request, _response, buffer) {
+      if (request.originalUrl === "/api/webhooks/razorpay") request.rawBody = buffer.toString("utf8");
+    },
   })
 );
 

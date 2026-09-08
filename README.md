@@ -12,6 +12,26 @@ Readable MERN project with separate `client` and `server` folders.
 - Completion sends OK, rework and rejection PCS to their warehouses. Extra picked elastic is saved automatically as DC + Colour + Remaining MTR in Balance Elastic Warehouse.
 - Cutting DC can be viewed by DC number, printed, or downloaded as a landscape PDF.
 
+## SaaS security and operations
+
+- Role enforcement: SaaS Super Admin, Company Admin/Admin, Store and Production-related users.
+- Company and factory isolation is applied automatically to MongoDB reads, writes and aggregations.
+- Active-subscription middleware blocks expired/suspended companies while allowing subscription renewal.
+- Manual subscription approval and Razorpay order/webhook support are included.
+- Every authenticated create/update/delete request produces an audit record without passwords or reset tokens.
+- Company administrators can filter audit history and download a company-scoped JSON backup.
+- Login throttling, BCrypt password hashing, expiring JWT, password reset expiry, CORS allow-list, security headers and production HSTS are enabled.
+- QR camera permission is limited by browser security policy; production scan links open a standalone screen without sidebar navigation.
+- Mobile layouts, English/Tamil selector, privacy policy and an eight-step onboarding guide are included.
+
+### Production environment variables
+
+Set `MONGODB_URI`, a long random `JWT_SECRET`, exact HTTPS `CLIENT_URL`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `RESEND_API_KEY`, and `EMAIL_FROM` on Render. Never commit real secrets. Configure the Razorpay webhook URL as `/api/webhooks/razorpay`. Netlify and Render must both use HTTPS.
+
+### Backup responsibility
+
+The in-app export creates a tenant-scoped portable backup. For disaster recovery, also enable MongoDB Atlas automated backups and periodically test restore in a separate database. Do not store backup JSON in a public folder.
+
 ## SaaS production workflow
 
 - Company + factory tenant isolation with audit fields.

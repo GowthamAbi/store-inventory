@@ -143,6 +143,7 @@ export default function LoginPage({ initialMode = false }) {
         {!registerMode && (
           <button type="button" className="link" onClick={() => setForgotMode(true)}>Forgot Password?</button>
         )}
+        <button type="button" className="link" onClick={() => { window.location.href = "/privacy"; }}>Privacy Policy</button>
       </form>
     </div>
   );

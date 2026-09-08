@@ -19,6 +19,12 @@
 @media(max-width:800px){.cutting-header,.cutting-colour-head,.cutting-size-row{grid-template-columns:1fr}.cutting-total{justify-content:space-between}.cutting-preview{overflow-x:auto}}
 @media print{body *{visibility:hidden}.cutting-preview,.cutting-preview *{visibility:visible}.cutting-preview{position:absolute;inset:0;margin:0;border:0}.cutting-preview .row-actions{display:none}}
 
+/* SaaS controls, audit and legal */
+.subscription-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}.subscription-summary>div{display:grid;gap:6px;padding:20px;border-radius:15px;background:linear-gradient(135deg,#103f35,#18745e);color:#fff}.subscription-summary small{opacity:.75}.subscription-summary b{font-size:22px}.audit-toolbar{display:flex;align-items:end;gap:12px;flex-wrap:wrap;padding:18px}.audit-toolbar label{display:grid;gap:6px;color:#5d716b;font-weight:700}.audit-toolbar input{padding:10px;border:1px solid #c9dad5;border-radius:9px}.legal-page{width:min(900px,calc(100% - 32px));margin:35px auto;padding:30px;border-radius:18px;background:#fff;box-shadow:0 14px 45px rgba(7,45,36,.13);color:#173c33}.legal-page h1{color:#115b49}.legal-page h2{margin-top:24px}.legal-page p{line-height:1.75}.profile select{max-width:100px;padding:7px;border:1px solid rgba(255,255,255,.22);border-radius:8px;background:#154f42;color:#fff}
+@media(max-width:700px){.subscription-summary{grid-template-columns:1fr}.audit-toolbar>*{width:100%}}
+.status-green{color:#087a4e}.status-red{color:#c33229}.report-download{justify-content:flex-end;padding:12px}
+.onboarding-progress{display:grid;gap:10px;padding:20px}.onboarding-progress progress{width:100%;height:14px;accent-color:#178268}.onboarding-list{display:grid;gap:10px;padding:0 20px 20px}.onboarding-list button{display:flex;align-items:center;gap:14px;padding:16px;border:1px solid #d4e2de;border-radius:13px;background:#fff;text-align:left}.onboarding-list button.done{background:#ecf8f4;border-color:#7dc8b4}.onboarding-list svg{color:#178268}.onboarding-list span{display:grid;gap:3px}.onboarding-list small{color:#788b85;font-size:10px}
+
 /* Blocks every click while one or more API requests are running. */
 .global-loader {
   position: fixed;

@@ -12,6 +12,11 @@ const companySchema = new mongoose.Schema({
   address: { type: String, default: "" },
   subscriptionPlan: { type: String, enum: ["Trial", "Basic", "Professional", "Enterprise"], default: "Trial" },
   subscriptionStatus: { type: String, enum: ["Active", "Suspended", "Expired"], default: "Active" },
+  subscriptionStartsAt: Date,
+  subscriptionEndsAt: Date,
+  preferredLanguage: { type: String, enum: ["en", "ta"], default: "en" },
+  onboardingCompleted: { type: Boolean, default: false },
+  privacyAcceptedAt: Date,
   factories: [factorySchema],
   active: { type: Boolean, default: true },
 }, { timestamps: true });

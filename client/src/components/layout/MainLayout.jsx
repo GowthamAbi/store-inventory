@@ -21,9 +21,13 @@ import {
   Building2,
   Sparkles,
   X,
+  ShieldCheck,
+  DatabaseBackup,
+  ListChecks,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
+import { useLanguage } from "../../context/LanguageContext.jsx";
 
 const navigation = [
   ["Modules", Sparkles, ["saas_super_admin", "company_admin", "admin"]],
@@ -45,6 +49,9 @@ const navigation = [
   ["Sewing Delivery", Scissors, ["saas_super_admin", "company_admin", "admin", "production", "sewing_coordinator"]],
   ["Reports", BarChart3, ["saas_super_admin", "company_admin", "admin", "store", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"]],
   ["User Management", Users, ["saas_super_admin", "company_admin", "admin"]],
+  ["Subscription", ShieldCheck, ["saas_super_admin", "company_admin", "admin"]],
+  ["Audit & Backup", DatabaseBackup, ["saas_super_admin", "company_admin", "admin"]],
+  ["Setup Guide", ListChecks, ["saas_super_admin", "company_admin", "admin"]],
   ["SaaS Companies", Building2, ["saas_super_admin"]],
 ];
 
@@ -53,6 +60,7 @@ export default function MainLayout({ page, onPageChange, children }) {
   const [mastersOpen, setMastersOpen] = useState(["Production Masters", "Machine Register", "Employee Register"].includes(page));
   const [warehouseOpen, setWarehouseOpen] = useState(["Production Ready", "Rework Warehouse", "Rejection Warehouse", "Balance Elastic", "Section Delivery"].includes(page));
   const { user, logout } = useAuth();
+  const { language, setLanguage } = useLanguage();
 
   function selectPage(pageName) {
     onPageChange(pageName);
@@ -98,10 +106,11 @@ export default function MainLayout({ page, onPageChange, children }) {
               <button className={page === "Balance Elastic" ? "active" : ""} onClick={() => selectPage("Balance Elastic")}>Balance Elastic</button>
               <button className={page === "Section Delivery" ? "active" : ""} onClick={() => selectPage("Section Delivery")}>Section Delivery</button>
             </div>}
-          </div> : <button className={page === name ? "active" : ""} key={name} onClick={() => selectPage(name)}><Icon />{name}</button>)}
+          </div> : <button className={page === name ? "active" : ""} key={name} onClick={() => selectPage(name)}><Icon />{language === "ta" && name === "Dashboard" ? "முகப்பு" : language === "ta" && name === "Inward" ? "உள்வரவு" : language === "ta" && name === "Stock" ? "இருப்பு" : language === "ta" && name === "Reports" ? "அறிக்கைகள்" : name}</button>)}
         </nav>
 
         <div className="profile">
+          <select aria-label="Language" value={language} onChange={(event) => setLanguage(event.target.value)}><option value="en">English</option><option value="ta">தமிழ்</option></select>
           <div>
             <b>{user?.name}</b>
             <small>{user?.role}</small>

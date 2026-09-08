@@ -16,7 +16,7 @@ function createToken(user) {
 function createAuthResponse(user) {
   return {
     token: createToken(user),
-    user: { name: user.name, email: user.email, role: user.role, companyId: user.companyId, factoryId: user.factoryId, permissions: user.permissions || [] },
+    user: { _id: user._id, name: user.name, email: user.email, role: user.role, companyId: user.companyId, factoryId: user.factoryId, permissions: user.permissions || [] },
   };
 }
 
@@ -41,7 +41,7 @@ export async function register(request, response) {
     company.factories = [{ name: factoryName, code: "MAIN" }];
     await company.save();
   } else {
-    company = await Company.create({ companyName, factories: [{ name: factoryName, code: "MAIN" }] });
+    company = await Company.create({ companyName, subscriptionStartsAt: new Date(), subscriptionEndsAt: new Date(Date.now() + 14 * 86400000), factories: [{ name: factoryName, code: "MAIN" }] });
   }
   const user = await User.create({
     name,
@@ -139,5 +139,10 @@ export async function login(request, response) {
 
   if (!validPassword) throw new ApiError(401, "Incorrect email or password");
   if (!user.active) throw new ApiError(403, "This user account is disabled");
+  if (user.role !== "saas_super_admin") {
+    const company = await Company.findById(user.companyId).lean();
+    const expired = company?.subscriptionEndsAt && new Date(company.subscriptionEndsAt) < new Date();
+    if (!company?.active || company?.subscriptionStatus !== "Active" || expired) throw new ApiError(402, "Company subscription is inactive or expired");
+  }
   response.json(createAuthResponse(user));
 }

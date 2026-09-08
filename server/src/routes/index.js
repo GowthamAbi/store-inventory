@@ -10,6 +10,11 @@ import companyRoutes from "./company.routes.js";
 import reportRoutes from "./report.routes.js";
 import masterRoutes from "./master.routes.js";
 import warehouseRoutes from "./warehouse.routes.js";
+import saasRoutes from "./saas.routes.js";
+import { razorpayWebhook } from "../controllers/saasController.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { requireActiveSubscription } from "../middleware/subscriptionMiddleware.js";
+import { auditMutations } from "../middleware/auditMiddleware.js";
 import { requireAuth } from "../middleware/authMiddleware.js";
 import { allowRoles } from "../middleware/roleMiddleware.js";
 
@@ -19,8 +24,12 @@ router.get("/health", (_request, response) => {
   response.json({ success: true, service: "Accessories Flow API" });
 });
 
+router.post("/webhooks/razorpay", asyncHandler(razorpayWebhook));
+
 router.use("/auth", authRoutes);
 router.use("/public", publicOutwardRoutes);
+router.use(requireAuth, requireActiveSubscription, auditMutations);
+router.use("/saas", saasRoutes);
 router.use("/dashboard", requireAuth, dashboardRoutes);
 router.use("/items", requireAuth, allowRoles("saas_super_admin", "company_admin", "admin", "store", "management", "view_only"), itemRoutes);
 router.use("/pos", requireAuth, allowRoles("saas_super_admin", "company_admin", "admin", "store", "management", "view_only"), purchaseOrderRoutes);

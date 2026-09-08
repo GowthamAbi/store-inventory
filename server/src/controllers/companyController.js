@@ -17,6 +17,8 @@ export async function createCompany(request, response) {
     companyName,
     address,
     subscriptionPlan,
+    subscriptionStartsAt: new Date(),
+    subscriptionEndsAt: new Date(Date.now() + 14 * 86400000),
     factories: [{ name: factoryName, code: request.body.factoryCode || "MAIN", address }],
   });
   const factoryId = company.factories[0]._id;

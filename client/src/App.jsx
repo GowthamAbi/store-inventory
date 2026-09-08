@@ -6,6 +6,8 @@ import PublicOutwardPage from "./pages/outward/PublicOutwardPage.jsx";
 import AppRoutes from "./routes/AppRoutes.jsx";
 import ProductionControlPage from "./pages/production/ProductionControlPage.jsx";
 import GlobalFeedback from "./components/common/GlobalFeedback.jsx";
+import { LanguageProvider } from "./context/LanguageContext.jsx";
+import PrivacyPage from "./pages/legal/PrivacyPage.jsx";
 
 function Application() {
   const { token, user } = useAuth();
@@ -63,14 +65,16 @@ function Application() {
 export default function App() {
   const inwardNo = new URLSearchParams(window.location.search).get("inwardNo");
 
+  if (window.location.pathname === "/privacy") return <PrivacyPage />;
+
   if (window.location.pathname === "/outward" && inwardNo) {
     return <><GlobalFeedback /><PublicOutwardPage inwardNo={inwardNo} /></>;
   }
 
   return (
-    <AuthProvider>
+    <LanguageProvider><AuthProvider>
       <GlobalFeedback />
       <Application />
-    </AuthProvider>
+    </AuthProvider></LanguageProvider>
   );
 }

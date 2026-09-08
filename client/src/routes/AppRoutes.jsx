@@ -20,6 +20,9 @@ import ModuleSelectionPage from "../pages/dashboard/ModuleSelectionPage.jsx";
 import MachineStatusPage from "../pages/production/MachineStatusPage.jsx";
 import WarehousePage from "../pages/production/WarehousePage.jsx";
 import CuttingDcPage from "../pages/production/CuttingDcPage.jsx";
+import SaasControlPage from "../pages/saas/SaasControlPage.jsx";
+import AuditBackupPage from "../pages/saas/AuditBackupPage.jsx";
+import OnboardingPage from "../pages/saas/OnboardingPage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
@@ -76,6 +79,12 @@ export default function AppRoutes({ page, notify, onPageChange }) {
       return <UserManagementPage notify={notify} />;
     case "SaaS Companies":
       return <CompanyManagementPage notify={notify} />;
+    case "Subscription":
+      return <SaasControlPage notify={notify} />;
+    case "Audit & Backup":
+      return <AuditBackupPage notify={notify} />;
+    case "Setup Guide":
+      return <OnboardingPage notify={notify} />;
     case "Reports":
     case "Reports & Traceability":
       return <ReportsPage notify={notify} />;

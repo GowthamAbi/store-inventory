@@ -20,6 +20,7 @@ import {
   savePendingIssue,
   startJob,
   stopJob,
+  deletePendingIssue,
 } from "../controllers/productionController.js";
 import { allowRoles } from "../middleware/roleMiddleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -56,6 +57,7 @@ router.get("/pending", asyncHandler(getPendingIssues));
 router.post("/pending", asyncHandler(savePendingIssue));
 router.put("/pending/:id", asyncHandler(savePendingIssue));
 router.patch("/pending/:id/status", asyncHandler(changeIssueStatus));
+router.delete("/pending/:id", asyncHandler(deletePendingIssue));
 router.get("/sewing", asyncHandler(getSewingDeliveries));
 router.post("/sewing", asyncHandler(createSewingDelivery));
 router.get("/sewing-holds", asyncHandler(getSewingHolds));

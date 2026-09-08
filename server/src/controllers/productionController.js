@@ -9,6 +9,7 @@ import SewingHold from "../models/SewingHold.js";
 import ProductionPlan from "../models/ProductionPlan.js";
 import WarehouseStock from "../models/WarehouseStock.js";
 import CuttingDc from "../models/CuttingDc.js";
+import Inward from "../models/Inward.js";
 import ApiError from "../utils/ApiError.js";
 import { generateReferenceNo } from "../utils/generateReferenceNo.js";
 
@@ -290,7 +291,13 @@ export async function resumeJob(request, response) {
 }
 
 export async function getPendingIssues(_request, response) {
-  response.json(await PendingIssue.find().sort({ createdAt: -1 }));
+  const issues = await PendingIssue.find().sort({ createdAt: -1 });
+  for (const issue of issues) {
+    if (issue.issueType !== "Material Shortage" || ["Resolved", "Cancelled"].includes(issue.status)) continue;
+    const inwardExists = await Inward.exists({ itemCode: issue.itemCode, colour: issue.colour, balanceQty: { $gt: 0 } });
+    if (inwardExists && issue.status !== "Material Received") { issue.status = "Material Received"; await issue.save(); }
+  }
+  response.json(issues);
 }
 
 export async function savePendingIssue(request, response) {
@@ -312,6 +319,14 @@ export async function changeIssueStatus(request, response) {
   );
   if (!issue) throw new ApiError(404, "Pending issue not found");
   response.json(issue);
+}
+
+export async function deletePendingIssue(request, response) {
+  const issue = await PendingIssue.findById(request.params.id);
+  if (!issue) throw new ApiError(404, "Pending issue not found");
+  if (issue.status !== "Material Received" && request.user?.role !== "saas_super_admin") throw new ApiError(409, "Delete is allowed after material is received");
+  await issue.deleteOne();
+  response.json({ message: "Pending request deleted" });
 }
 
 export async function getSewingHolds(_request, response) {
@@ -341,29 +356,32 @@ export async function getSewingDeliveries(_request, response) {
 }
 
 export async function createSewingDelivery(request, response) {
-  const jobs = await ProductionJob.find({
-    outwardNo: normalize(request.body.outwardNo),
-    colour: normalize(request.body.colour),
-    size: normalize(request.body.size),
-  });
-  const produced = jobs.reduce((sum, entry) => sum + entry.okPcs, 0);
-  const delivered = await SewingDelivery.aggregate([
-    { $match: { outwardNo: normalize(request.body.outwardNo), colour: normalize(request.body.colour), size: normalize(request.body.size) } },
-    { $group: { _id: null, total: { $sum: "$quantity" } } },
-  ]);
-  const available = produced - (delivered[0]?.total || 0);
+  const outwardNo = normalize(request.body.outwardNo);
+  const colour = normalize(request.body.colour);
+  const size = normalize(request.body.size);
+  const readyRows = await WarehouseStock.find({ warehouseType: "PRODUCTION_READY", outwardNo, colour, size, balanceQty: { $gt: 0 } }).sort({ createdAt: 1 });
+  const available = readyRows.reduce((sum, row) => sum + Number(row.balanceQty || 0), 0);
   const quantity = Number(request.body.quantity);
   if (!Number.isFinite(quantity) || quantity <= 0 || quantity > available) {
     throw new ApiError(400, `Only ${Math.max(0, available)} OK pcs available for sewing`);
   }
   const delivery = await SewingDelivery.create({
     ...request.body,
-    outwardNo: normalize(request.body.outwardNo),
-    colour: normalize(request.body.colour),
-    size: normalize(request.body.size),
+    outwardNo,
+    colour,
+    size,
     quantity,
     deliveryNo: generateReferenceNo("SEW"),
     createdBy: request.user?.name || "Production User",
   });
+  let remaining = quantity;
+  for (const stock of readyRows) {
+    const moved = Math.min(stock.balanceQty, remaining);
+    stock.balanceQty -= moved;
+    stock.history.push({ action: "SEWING_DELIVERY", quantity: moved, fromType: "PRODUCTION_READY", toType: "SEWING", sectionCode: request.body.sewingName, user: request.user?.name || "Production User" });
+    await stock.save();
+    remaining -= moved;
+    if (remaining === 0) break;
+  }
   response.status(201).json(delivery);
 }
