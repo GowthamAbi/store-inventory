@@ -37,6 +37,7 @@ const navigation = [
   ["Master Data", Settings2, ["saas_super_admin", "company_admin", "admin", "store"]],
   ["Masters", Settings2, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "maintenance"]],
   ["Production Planning", ClipboardList, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "supervisor"]],
+  ["Cutting DC", Scissors, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "supervisor"]],
   ["Production Control", Activity, ["saas_super_admin", "company_admin", "admin", "production", "production_operator", "supervisor"]],
   ["Status", Clock3, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance", "management", "view_only"]],
   ["Warehouse", Boxes, ["saas_super_admin", "company_admin", "admin", "production", "production_planner", "production_operator", "supervisor", "quality", "management", "view_only"]],
@@ -50,7 +51,7 @@ const navigation = [
 export default function MainLayout({ page, onPageChange, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mastersOpen, setMastersOpen] = useState(["Production Masters", "Machine Register", "Employee Register"].includes(page));
-  const [warehouseOpen, setWarehouseOpen] = useState(["Production Ready", "Rework Warehouse", "Rejection Warehouse", "Section Delivery"].includes(page));
+  const [warehouseOpen, setWarehouseOpen] = useState(["Production Ready", "Rework Warehouse", "Rejection Warehouse", "Balance Elastic", "Section Delivery"].includes(page));
   const { user, logout } = useAuth();
 
   function selectPage(pageName) {
@@ -89,11 +90,12 @@ export default function MainLayout({ page, onPageChange, children }) {
               <button className={page === "Employee Register" ? "active" : ""} onClick={() => selectPage("Employee Register")}>Employee Register + QR</button>
             </div>}
           </div> : name === "Warehouse" ? <div className="nav-group" key={name}>
-            <button className={["Production Ready", "Rework Warehouse", "Rejection Warehouse", "Section Delivery"].includes(page) ? "group-active" : ""} onClick={() => setWarehouseOpen((open) => !open)}><Icon /><span>Warehouse</span><ChevronDown className={warehouseOpen ? "chevron open" : "chevron"} /></button>
+            <button className={["Production Ready", "Rework Warehouse", "Rejection Warehouse", "Balance Elastic", "Section Delivery"].includes(page) ? "group-active" : ""} onClick={() => setWarehouseOpen((open) => !open)}><Icon /><span>Warehouse</span><ChevronDown className={warehouseOpen ? "chevron open" : "chevron"} /></button>
             {warehouseOpen && <div className="nav-submenu">
               <button className={page === "Production Ready" ? "active" : ""} onClick={() => selectPage("Production Ready")}>Production Ready</button>
               <button className={page === "Rework Warehouse" ? "active" : ""} onClick={() => selectPage("Rework Warehouse")}>Rework</button>
               <button className={page === "Rejection Warehouse" ? "active" : ""} onClick={() => selectPage("Rejection Warehouse")}>Rejection</button>
+              <button className={page === "Balance Elastic" ? "active" : ""} onClick={() => selectPage("Balance Elastic")}>Balance Elastic</button>
               <button className={page === "Section Delivery" ? "active" : ""} onClick={() => selectPage("Section Delivery")}>Section Delivery</button>
             </div>}
           </div> : <button className={page === name ? "active" : ""} key={name} onClick={() => selectPage(name)}><Icon />{name}</button>)}

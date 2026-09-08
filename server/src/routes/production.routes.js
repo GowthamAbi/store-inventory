@@ -23,6 +23,7 @@ import {
 } from "../controllers/productionController.js";
 import { allowRoles } from "../middleware/roleMiddleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { getCuttingDc, getCuttingDcs, getMeasurements, saveCuttingDc } from "../controllers/cuttingDcController.js";
 
 const router = Router();
 const productionAccess = allowRoles(
@@ -33,6 +34,10 @@ const productionAccess = allowRoles(
 
 router.use(productionAccess);
 router.get("/summary", asyncHandler(getProductionSummary));
+router.get("/cutting-dcs", asyncHandler(getCuttingDcs));
+router.get("/cutting-dcs/:dcNo", asyncHandler(getCuttingDc));
+router.post("/cutting-dcs", asyncHandler(saveCuttingDc));
+router.get("/measurements", asyncHandler(getMeasurements));
 router.get("/plans", asyncHandler(getPlans));
 router.post("/plans", allowRoles("saas_super_admin", "company_admin", "admin", "production_planner", "production"), asyncHandler(savePlan));
 router.put("/plans/:id", allowRoles("saas_super_admin", "company_admin", "admin", "production_planner", "production"), asyncHandler(savePlan));

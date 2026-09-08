@@ -7,7 +7,7 @@ import PageTitle from "../../components/common/PageTitle.jsx";
 import QRScanInput from "../../components/qr/QRScanInput.jsx";
 import { downloadExcel } from "../../services/csvService.js";
 
-const labels = { PRODUCTION_READY: "Production Ready", REWORK: "Rework", REJECTION: "Rejection", SECTION_DELIVERY: "Section Delivery" };
+  const labels = { PRODUCTION_READY: "Production Ready", REWORK: "Rework", REJECTION: "Rejection", BALANCE_ELASTIC: "Balance Elastic", SECTION_DELIVERY: "Section Delivery" };
 const blankAction = { action: "complete", quantity: "", itemName: "", colour: "", size: "", reason: "", sectionCode: "" };
 
 export default function WarehousePage({ initialType = "PRODUCTION_READY", initialDc = "", notify }) {
@@ -35,14 +35,14 @@ export default function WarehousePage({ initialType = "PRODUCTION_READY", initia
   const columns = [
     { key: "referenceNo", label: "Reference" }, { key: "dcNo", label: "DC No" },
     { key: "itemName", label: "Item Name" }, { key: "colour", label: "Colour" },
-    { key: "size", label: "Size" }, { key: "originalQty", label: "Original PCS" },
-    { key: "balanceQty", label: "Balance PCS" }, { key: "sectionCode", label: "Section" },
+    { key: "size", label: "Size" }, { key: "originalQty", label: "Original Qty", render: (row) => `${row.originalQty} ${row.unit || "PCS"}` },
+    { key: "balanceQty", label: "Balance Qty", render: (row) => `${row.balanceQty} ${row.unit || "PCS"}` }, { key: "sectionCode", label: "Section" },
     { key: "actions", label: "Actions", render: (row) => type === "REWORK" && row.balanceQty > 0 ? <div className="warehouse-actions"><button onClick={() => openAction(row, "complete")}>Ready</button><button onClick={() => openAction(row, "convert")}>Convert</button><button className="danger" onClick={() => openAction(row, "reject")}>Reject</button></div> : type === "PRODUCTION_READY" && row.balanceQty > 0 ? <button className="primary" onClick={() => openAction(row, "deliver")}>Deliver to Section</button> : "—" },
   ];
 
   const total = rows.reduce((sum, row) => sum + Number(row.balanceQty || 0), 0);
   return <>
-    <PageTitle title="Warehouse" subtitle="Production-ready, rework, rejection and section delivery stock" />
+    <PageTitle title="Warehouse" subtitle="Production-ready, rework, rejection, balance elastic and section delivery stock" />
     <div className="warehouse-tabs">{Object.entries(labels).map(([key, label]) => <button className={type === key ? "active" : ""} key={key} onClick={() => { setType(key); load(key, dcNo); }}>{label}</button>)}</div>
     <div className="warehouse-summary"><PackageCheck /><div><small>{labels[type]} Balance</small><b>{total} PCS</b></div><div className="warehouse-dc-search"><QRScanInput field="dcNo" label="Main DC QR" required={false} value={dcNo} onChange={(value) => setDcNo(value.toUpperCase())}/><button className="primary" onClick={() => load(type, dcNo)}>View DC Stock</button><button onClick={() => downloadExcel(`${type.toLowerCase()}-warehouse.xls`, rows)}><Download /> Excel</button></div></div>
     <Card title={`${labels[type]} Warehouse`}><DataTable rows={rows} columns={columns} /></Card>

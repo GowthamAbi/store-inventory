@@ -8,6 +8,7 @@ import SewingDelivery from "../models/SewingDelivery.js";
 import SewingHold from "../models/SewingHold.js";
 import ProductionPlan from "../models/ProductionPlan.js";
 import WarehouseStock from "../models/WarehouseStock.js";
+import CuttingDc from "../models/CuttingDc.js";
 import ApiError from "../utils/ApiError.js";
 import { generateReferenceNo } from "../utils/generateReferenceNo.js";
 
@@ -131,12 +132,14 @@ export async function getDcPlan(request, response) {
     colour: entry.colour || itemMap.get(entry.itemCode)?.colour || "UNSPECIFIED",
     description: itemMap.get(entry.itemCode)?.description || entry.itemName || entry.itemCode,
   }));
+  const cuttingDc = await CuttingDc.findOne({ dcNo }).lean();
   response.json({
     dcNo: outwards[0].dcNo,
     section: outwards[0].section,
     itemNames: [...new Set(rows.map((entry) => entry.itemName).filter(Boolean))],
     colours: [...new Set(rows.map((entry) => entry.colour))],
     rows,
+    cuttingDc,
   });
 }
 
@@ -170,8 +173,10 @@ export async function startJob(request, response) {
   }
   const outwardNo = outward.outwardNo;
   const productionDcNo = outward.dcNo;
-  const sizes = String(request.body.size || "").split(",").map(normalize).filter(Boolean);
-  const pieceValues = String(request.body.plannedPcs || "").split(",").map((value) => Number(value.trim()));
+  const cuttingDc = await CuttingDc.findOne({ dcNo: productionDcNo }).lean();
+  const cuttingColour = cuttingDc?.colours?.find((line) => normalize(line.colour) === requestedColour);
+  const sizes = cuttingColour?.sizes?.length ? cuttingColour.sizes.map((line) => normalize(line.size)) : String(request.body.size || "").split(",").map(normalize).filter(Boolean);
+  const pieceValues = cuttingColour?.sizes?.length ? cuttingColour.sizes.map((line) => Number(line.pcs)) : String(request.body.plannedPcs || "").split(",").map((value) => Number(value.trim()));
   if (!sizes.length) throw new ApiError(400, "At least one size is required");
   if (sizes.length !== pieceValues.length) throw new ApiError(400, "Each size must have one matching PCS quantity");
   if (pieceValues.some((value) => !Number.isFinite(value) || value <= 0)) throw new ApiError(400, "Every planned PCS quantity must be greater than zero");
@@ -244,6 +249,25 @@ export async function stopJob(request, response) {
       createdBy: request.user?.name || "Production User",
     })));
     if (warehouseRows.length) await WarehouseStock.insertMany(warehouseRows);
+    if (job.status === "Completed") {
+      const cutting = await CuttingDc.findOne({ dcNo: job.dcNo });
+      const colourPlan = cutting?.colours?.find((line) => normalize(line.colour) === normalize(job.colour));
+      const pickedRows = await Outward.find({ dcNo: job.dcNo, itemCode: job.itemCode }).lean();
+      const pickedMtr = pickedRows.filter((row) => normalize(row.colour) === normalize(job.colour)).reduce((sum, row) => sum + Number(row.quantity || 0), 0);
+      const usedMtr = (colourPlan?.sizes || []).reduce((sum, plan) => {
+        const completed = job.completionBySize.filter((row) => normalize(row.size) === normalize(plan.size)).reduce((total, row) => total + Number(row.okPcs || 0) + Number(row.reworkPcs || 0) + Number(row.rejectionPcs || 0), 0);
+        return sum + completed * Number(plan.measurement || 0);
+      }, 0);
+      const remainingMtr = Number(Math.max(0, pickedMtr - usedMtr).toFixed(3));
+      if (remainingMtr > 0 && !await WarehouseStock.exists({ warehouseType: "BALANCE_ELASTIC", jobNo: job.jobNo })) {
+        await WarehouseStock.create({ referenceNo: generateReferenceNo("BAL"), warehouseType: "BALANCE_ELASTIC", jobNo: job.jobNo, dcNo: job.dcNo, outwardNo: job.outwardNo, itemCode: job.itemCode, itemName: job.itemName, colour: job.colour, size: "MTR", originalQty: remainingMtr, balanceQty: remainingMtr, unit: "MTR", reason: "Automatic balance after production completion", createdBy: request.user?.name || "Production User" });
+      }
+      if (cutting && colourPlan) {
+        colourPlan.status = "COMPLETED";
+        cutting.status = cutting.colours.every((line) => line.status === "COMPLETED") ? "COMPLETED" : "PARTIAL";
+        await cutting.save();
+      }
+    }
   } else {
     job.status = action;
     job.events.push({ type: action, reason: request.body.reason || "", startTime: new Date() });

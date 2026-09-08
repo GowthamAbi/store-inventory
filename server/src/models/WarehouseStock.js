@@ -16,7 +16,7 @@ const historySchema = new mongoose.Schema({
 
 const warehouseStockSchema = new mongoose.Schema({
   referenceNo: { type: String, required: true, unique: true },
-  warehouseType: { type: String, enum: ["PRODUCTION_READY", "REWORK", "REJECTION", "SECTION_DELIVERY"], required: true, index: true },
+  warehouseType: { type: String, enum: ["PRODUCTION_READY", "REWORK", "REJECTION", "SECTION_DELIVERY", "BALANCE_ELASTIC"], required: true, index: true },
   jobNo: { type: String, required: true, uppercase: true, index: true },
   dcNo: { type: String, required: true, uppercase: true, index: true },
   outwardNo: { type: String, required: true, uppercase: true },
@@ -28,6 +28,7 @@ const warehouseStockSchema = new mongoose.Schema({
   balanceQty: { type: Number, required: true, min: 0 },
   sectionCode: { type: String, default: "", uppercase: true },
   reason: { type: String, default: "" },
+  unit: { type: String, default: "PCS" },
   history: [historySchema],
   createdBy: { type: String, default: "Production User" },
 }, { timestamps: true });

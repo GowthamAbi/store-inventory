@@ -2,6 +2,16 @@
 
 Readable MERN project with separate `client` and `server` folders.
 
+## Elastic Cutting DC workflow
+
+- Cutting DC No and Store Outward DC No use the same common number.
+- Item Name + Style + Size measurement is saved in Measurement Master and auto-filled next time.
+- Colour-wise PCS and measurement calculate wanted MTR automatically (maximum 10 size lines).
+- Material is validated against colour-wise Store Outward. Shortage can use Balance Elastic or create a No Stock request for Store.
+- Main DC scanning in Production loads saved colour/size/PCS automatically.
+- Completion sends OK, rework and rejection PCS to their warehouses. Extra picked elastic is saved automatically as DC + Colour + Remaining MTR in Balance Elastic Warehouse.
+- Cutting DC can be viewed by DC number, printed, or downloaded as a landscape PDF.
+
 ## SaaS production workflow
 
 - Company + factory tenant isolation with audit fields.

@@ -304,3 +304,22 @@ export function printTransaction(targetId) {
   });
 }
 export const printCurrentPage = printTransaction;
+
+export async function downloadCuttingDcPdf(record) {
+  const pdf = new jsPDF({ orientation: "landscape", format: "a4" });
+  const rows = record.colours.flatMap((colour) => colour.sizes.map((size) => ({ ...size, colour: colour.colour })));
+  pdf.setFillColor(18, 92, 75); pdf.rect(0, 0, 297, 6, "F");
+  pdf.setTextColor(18, 60, 51); pdf.setFont("helvetica", "bold"); pdf.setFontSize(19); pdf.text("Accessories Flow", 14, 19);
+  pdf.setFontSize(11); pdf.text("ELASTIC CUTTING DC", 14, 28);
+  pdf.setFontSize(10); pdf.text(`DC No: ${record.dcNo}`, 218, 18); pdf.text(`Date: ${new Date(record.createdAt || Date.now()).toLocaleDateString()}`, 218, 27);
+  pdf.setDrawColor(24, 130, 103); pdf.line(14, 34, 283, 34);
+  pdf.setFontSize(9); pdf.text(`Item Name: ${record.itemName}`, 14, 44); pdf.text(`Item Code: ${record.itemCode || "-"}`, 105, 44); pdf.text(`Style: ${record.style}`, 190, 44); pdf.text(`Target: ${record.target || "-"}`, 250, 44);
+  const x = [14, 31, 91, 126, 163, 211], widths = [17, 60, 35, 37, 48, 72], headers = ["S.No", "Colour", "Size", "PCS", "Measurement MTR/PCS", "Wanted MTR"];
+  let y = 51; pdf.setFillColor(18, 92, 75); pdf.rect(14, y, 269, 10, "F"); pdf.setTextColor(255,255,255); pdf.setFontSize(8);
+  headers.forEach((header, i) => pdf.text(header, x[i] + widths[i] / 2, y + 6.5, { align: "center" })); y += 10;
+  pdf.setTextColor(25,45,40); pdf.setFont("helvetica", "normal");
+  rows.forEach((row, index) => { if (index % 2) { pdf.setFillColor(247,250,249); pdf.rect(14,y,269,9,"F"); } pdf.setDrawColor(205,220,215); pdf.rect(14,y,269,9); x.slice(1).forEach((lineX) => pdf.line(lineX,y,lineX,y+9)); [index+1,row.colour,row.size,row.pcs,row.measurement,row.wantedMtr].forEach((value,i) => pdf.text(String(value),x[i]+widths[i]/2,y+6,{align:"center"})); y += 9; });
+  pdf.setFont("helvetica", "bold"); pdf.text("TOTAL", 91, y + 7, { align: "right" }); pdf.text(String(record.totalPcs), 144.5, y + 7, { align: "center" }); pdf.text(`${record.totalMtr} MTR`, 247, y + 7, { align: "center" });
+  pdf.setFontSize(8); pdf.text("Prepared By", 22, 184); pdf.text("Checked By", 135, 184); pdf.text("Authorised By", 248, 184);
+  pdf.save(`${record.dcNo}-cutting-dc.pdf`);
+}
