@@ -8,6 +8,7 @@ import ProductionControlPage from "./pages/production/ProductionControlPage.jsx"
 import GlobalFeedback from "./components/common/GlobalFeedback.jsx";
 import { LanguageProvider } from "./context/LanguageContext.jsx";
 import PrivacyPage from "./pages/legal/PrivacyPage.jsx";
+import SuperAdminLayout from "./components/layout/SuperAdminLayout.jsx";
 
 function Application() {
   const { token, user } = useAuth();
@@ -15,7 +16,9 @@ function Application() {
   const [page, setPage] = useState(
     window.location.pathname === "/production"
       ? "Production Control"
-      : adminRoles.includes(user?.role)
+      : user?.role === "saas_super_admin"
+        ? "SaaS Owner Dashboard"
+        : adminRoles.includes(user?.role)
         ? "Modules"
         : user?.role?.includes("production")
           ? "Production Dashboard"
@@ -27,7 +30,9 @@ function Application() {
     if (!token || !user) return;
     const nextPage = window.location.pathname === "/production"
       ? "Production Control"
-      : adminRoles.includes(user.role)
+      : user.role === "saas_super_admin"
+        ? "SaaS Owner Dashboard"
+        : adminRoles.includes(user.role)
         ? "Modules"
         : user.role?.includes("production") || ["supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"].includes(user.role)
           ? "Production Dashboard"
@@ -49,6 +54,15 @@ function Application() {
       <ProductionControlPage notify={notify} />
       {message && <div className="toast">{message}</div>}
     </div>;
+  }
+
+  if (user?.role === "saas_super_admin") {
+    return <>
+      <SuperAdminLayout page={page} onPageChange={setPage}>
+        <AppRoutes page={page} notify={notify} onPageChange={setPage} />
+      </SuperAdminLayout>
+      {message && <div className="toast">{message}</div>}
+    </>;
   }
 
   return (

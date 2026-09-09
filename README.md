@@ -24,6 +24,21 @@ Readable MERN project with separate `client` and `server` folders.
 - QR camera permission is limited by browser security policy; production scan links open a standalone screen without sidebar navigation.
 - Mobile layouts, English/Tamil selector, privacy policy and an eight-step onboarding guide are included.
 
+## Login and role setup
+
+1. With a fresh MongoDB database, open the website. The API detects that no user exists and opens **First-time SaaS Owner Setup** automatically.
+2. Register once. This first account is stored with role `saas_super_admin` and opens the dedicated SaaS Owner Dashboard.
+3. The SaaS Owner creates companies. Opening a company card shows its factory, subscription and department-wise users.
+4. The Owner creates a `company_admin` for each customer company. Company Admin creates Store and Production users from User Management.
+5. Every role uses the same Login page. The server reads the role from the authenticated database account and opens only the permitted layout:
+   - `saas_super_admin` → SaaS Owner Console
+   - `company_admin` / `admin` → Company module selector and administration
+   - `store` → Store dashboard, PO, inward, outward, stock and print
+   - `production` and production roles → Production dashboard, machines, Cutting DC, warehouses and sewing delivery
+6. Forgot Password also uses the same registered email. In production, configure `RESEND_API_KEY` and `EMAIL_FROM` to deliver the reset link.
+
+Do not create separate public login URLs for each role. One login form plus server-side role enforcement prevents users from selecting or changing their own role.
+
 ### Production environment variables
 
 Set `MONGODB_URI`, a long random `JWT_SECRET`, exact HTTPS `CLIENT_URL`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `RESEND_API_KEY`, and `EMAIL_FROM` on Render. Never commit real secrets. Configure the Razorpay webhook URL as `/api/webhooks/razorpay`. Netlify and Render must both use HTTPS.

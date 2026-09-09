@@ -4,7 +4,41 @@ import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 
 export async function getCompanies(_request, response) {
-  response.json(await Company.find().sort({ companyName: 1 }));
+  const companies = await Company.find().sort({ companyName: 1 }).lean();
+  const rows = await Promise.all(companies.map(async (company) => ({
+    ...company,
+    userCount: await User.countDocuments({ companyId: company._id }),
+    activeUsers: await User.countDocuments({ companyId: company._id, active: true }),
+  })));
+  response.json(rows);
+}
+
+export async function getCompanyWorkspace(request, response) {
+  const company = await Company.findById(request.params.id).lean();
+  if (!company) throw new ApiError(404, "Company not found");
+  const users = await User.find({ companyId: company._id })
+    .select("name email role permissions active factoryId createdAt")
+    .sort({ role: 1, name: 1 })
+    .lean();
+  const departments = {
+    Administration: users.filter((user) => ["company_admin", "admin", "management", "view_only"].includes(user.role)),
+    Store: users.filter((user) => user.role === "store"),
+    Production: users.filter((user) => ["production", "production_planner", "production_operator", "supervisor", "quality", "maintenance"].includes(user.role)),
+    "Swing / Delivery": users.filter((user) => user.role === "sewing_coordinator"),
+  };
+  response.json({ company, departments, users });
+}
+
+export async function updateCompanyUser(request, response) {
+  const allowedRoles = ["company_admin", "admin", "store", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"];
+  if (request.body.role && !allowedRoles.includes(request.body.role)) throw new ApiError(400, "Invalid company role");
+  const user = await User.findOneAndUpdate(
+    { _id: request.params.userId, companyId: request.params.id },
+    { ...(request.body.role && { role: request.body.role }), ...(typeof request.body.active === "boolean" && { active: request.body.active }), ...(request.body.permissions && { permissions: request.body.permissions }) },
+    { new: true, runValidators: true },
+  ).select("name email role permissions active factoryId createdAt");
+  if (!user) throw new ApiError(404, "Company user not found");
+  response.json(user);
 }
 
 export async function createCompany(request, response) {

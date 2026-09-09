@@ -20,6 +20,10 @@ function createAuthResponse(user) {
   };
 }
 
+export async function getSetupStatus(_request, response) {
+  response.json({ setupRequired: (await User.countDocuments()) === 0 });
+}
+
 export async function register(request, response) {
   const { name, email, password, companyName = "Accessories Flow", factoryName = "Main Factory" } = request.body;
 
@@ -145,4 +149,23 @@ export async function login(request, response) {
     if (!company?.active || company?.subscriptionStatus !== "Active" || expired) throw new ApiError(402, "Company subscription is inactive or expired");
   }
   response.json(createAuthResponse(user));
+}
+
+export async function getProfile(request, response) {
+  const user = await User.findById(request.user.id).select("name email role permissions active companyId factoryId createdAt").lean();
+  if (!user) throw new ApiError(404, "Profile not found");
+  response.json(user);
+}
+
+export async function updateProfile(request, response) {
+  const updates = {};
+  if (request.body.name?.trim()) updates.name = request.body.name.trim();
+  if (request.body.email?.trim()) updates.email = request.body.email.trim().toLowerCase();
+  if (request.body.password) {
+    if (request.body.password.length < 8) throw new ApiError(400, "Password must contain at least 8 characters");
+    updates.password = await bcrypt.hash(request.body.password, 12);
+  }
+  const user = await User.findByIdAndUpdate(request.user.id, updates, { new: true, runValidators: true }).select("name email role permissions active companyId factoryId createdAt");
+  if (!user) throw new ApiError(404, "Profile not found");
+  response.json(user);
 }

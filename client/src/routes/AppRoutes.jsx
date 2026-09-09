@@ -23,10 +23,26 @@ import CuttingDcPage from "../pages/production/CuttingDcPage.jsx";
 import SaasControlPage from "../pages/saas/SaasControlPage.jsx";
 import AuditBackupPage from "../pages/saas/AuditBackupPage.jsx";
 import OnboardingPage from "../pages/saas/OnboardingPage.jsx";
+import SuperAdminDashboardPage from "../pages/saas/SuperAdminDashboardPage.jsx";
+import ProfileSettingsPage from "../pages/saas/ProfileSettingsPage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
   switch (page) {
+    case "SaaS Owner Dashboard":
+      return <SuperAdminDashboardPage notify={notify} />;
+    case "Companies":
+      return <CompanyManagementPage notify={notify} />;
+    case "Subscriptions":
+      return <SaasControlPage notify={notify} />;
+    case "Owner Users":
+      return <UserManagementPage notify={notify} />;
+    case "Account Details":
+      return <ProfileSettingsPage mode="details" notify={notify} />;
+    case "Profile Settings":
+      return <ProfileSettingsPage notify={notify} />;
+    case "Owner Settings":
+      return <ProfileSettingsPage mode="settings" notify={notify} />;
     case "Modules":
       return <ModuleSelectionPage onSelect={onPageChange} />;
     case "Inward":

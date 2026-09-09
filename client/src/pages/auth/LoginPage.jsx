@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { api } from "../../api.js";
 import Field from "../../components/common/Field.jsx";
@@ -10,11 +10,21 @@ export default function LoginPage({ initialMode = false }) {
     initialMode === true || initialMode === "register",
   );
   const [submitting, setSubmitting] = useState(false);
+  const [setupRequired, setSetupRequired] = useState(false);
   const resetToken = new URLSearchParams(window.location.search).get("resetToken");
   const [forgotMode, setForgotMode] = useState(Boolean(resetToken));
   const [form, setForm] = useState({ name: "", companyName: "", factoryName: "", email: "", password: "", role: "store" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    api("/auth/setup-status")
+      .then((data) => {
+        setSetupRequired(data.setupRequired);
+        if (data.setupRequired) setRegisterMode(true);
+      })
+      .catch(() => undefined);
+  }, []);
 
   async function submit(event) {
     event.preventDefault();
@@ -85,7 +95,7 @@ export default function LoginPage({ initialMode = false }) {
           <Sparkles />
         </div>
         <h1>Accessories Flow</h1>
-        <p>{registerMode ? "Create the first company administrator" : "Sign in to continue"}</p>
+        <p>{registerMode ? "Create the SaaS Owner account · First setup only" : "Admin, Store and Production users sign in here"}</p>
 
         {registerMode && (
           <><Field label="Administrator Name">
@@ -133,16 +143,11 @@ export default function LoginPage({ initialMode = false }) {
               : "Login"}
         </button>
 
-        <button
-          type="button"
-          className="link"
-          onClick={() => setRegisterMode(!registerMode)}
-        >
-          {registerMode ? "Already registered? Login" : "New user? Register"}
-        </button>
+        {setupRequired && <button type="button" className="link" onClick={() => setRegisterMode(!registerMode)}>{registerMode ? "Already registered? Login" : "First-time SaaS Owner Setup"}</button>}
         {!registerMode && (
           <button type="button" className="link" onClick={() => setForgotMode(true)}>Forgot Password?</button>
         )}
+        {!registerMode && <div className="login-role-note"><b>One secure login page</b><span>Your email opens the correct workspace</span><small>SaaS Owner · Company Admin · Store · Production</small></div>}
         <button type="button" className="link" onClick={() => { window.location.href = "/privacy"; }}>Privacy Policy</button>
       </form>
     </div>
