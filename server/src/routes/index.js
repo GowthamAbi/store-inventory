@@ -11,6 +11,7 @@ import reportRoutes from "./report.routes.js";
 import masterRoutes from "./master.routes.js";
 import warehouseRoutes from "./warehouse.routes.js";
 import saasRoutes from "./saas.routes.js";
+import garmentRoutes from "./garment.routes.js";
 import { razorpayWebhook } from "../controllers/saasController.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { requireActiveSubscription } from "../middleware/subscriptionMiddleware.js";
@@ -39,5 +40,6 @@ router.use("/companies", requireAuth, companyRoutes);
 router.use("/reports", requireAuth, allowRoles("saas_super_admin", "company_admin", "admin", "store", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only", "production_planner", "production_operator", "production"), reportRoutes);
 router.use("/masters", requireAuth, allowRoles("saas_super_admin", "company_admin", "admin", "store", "production_planner", "production"), masterRoutes);
 router.use("/warehouse", requireAuth, allowRoles("saas_super_admin", "company_admin", "admin", "production", "production_planner", "production_operator", "supervisor", "quality", "management", "view_only"), warehouseRoutes);
+router.use("/garments", requireAuth, garmentRoutes);
 
 export default router;

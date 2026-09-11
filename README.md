@@ -2,6 +2,20 @@
 
 Readable MERN project with separate `client` and `server` folders.
 
+## Complete garment workflow
+
+The **Garment Flow** sidebar group adds an end-to-end, tenant-separated workflow:
+
+`BOM → PO → Fabric → Cutting → Accessories → Elastic → Stitching → Finishing → Packing → Dispatch`
+
+- BOM stores item, brand, style, fabric, colours, size-wise cutting/folding measurements and accessories. Non-admin changes can be sent for company-admin approval.
+- PO is uniquely tracked by PO + Style + Colour, includes size-wise quantities and reports cutting completed/pending quantities.
+- Materials Status uses the confirmed formula: `PO PCS × (Cutting KG + Folding KG) ÷ Colour Count` and compares the result with colour-wise fabric stock.
+- Every department entry is traced by DC, PO, item, style, colour and size with inward, outward, production, delivery, rework, rejection and waste movements.
+- Fabric stock is calculated from fabric inward less outward/waste/rejection. Cutting production updates the matching PO cutting balance.
+- Date/status/DC filters, CSV Excel-compatible downloads, loading feedback, audit middleware and company/factory isolation apply throughout the flow.
+- Stitching, Finishing, Packing and Dispatch are included as separate operational departments instead of being combined into Delivery.
+
 ## Elastic Cutting DC workflow
 
 - Cutting DC No and Store Outward DC No use the same common number.
