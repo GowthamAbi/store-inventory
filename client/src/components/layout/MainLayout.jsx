@@ -24,8 +24,6 @@ import {
   ShieldCheck,
   DatabaseBackup,
   ListChecks,
-  PackageCheck,
-  Truck,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
@@ -33,7 +31,6 @@ import { useLanguage } from "../../context/LanguageContext.jsx";
 
 const navigation = [
   ["Modules", Sparkles, ["saas_super_admin", "company_admin", "admin"]],
-  ["Garment Flow", Factory, ["saas_super_admin", "company_admin", "admin", "store", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"]],
   ["Dashboard", LayoutDashboard, ["saas_super_admin", "company_admin", "admin", "store", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"]],
   ["Inward", ArrowDownToLine, ["saas_super_admin", "company_admin", "admin", "store"]],
   ["PO", ShoppingCart, ["saas_super_admin", "company_admin", "admin", "store"]],
@@ -62,8 +59,6 @@ export default function MainLayout({ page, onPageChange, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mastersOpen, setMastersOpen] = useState(["Production Masters", "Machine Register", "Employee Register"].includes(page));
   const [warehouseOpen, setWarehouseOpen] = useState(["Production Ready", "Rework Warehouse", "Rejection Warehouse", "Balance Elastic", "Section Delivery"].includes(page));
-  const garmentPages = ["Garment Dashboard", "BOM", "Garment PO", "Materials Status", "Fabric", "Cutting", "Accessories", "Elastic", "Stitching", "Finishing", "Packing", "Dispatch"];
-  const [garmentOpen, setGarmentOpen] = useState(garmentPages.includes(page));
   const { user, logout } = useAuth();
   const { language, setLanguage } = useLanguage();
 
@@ -95,16 +90,7 @@ export default function MainLayout({ page, onPageChange, children }) {
         </div>
 
         <nav>
-          {navigation.filter(([, , roles]) => roles.includes(user?.role)).map(([name, Icon]) => name === "Garment Flow" ? <div className="nav-group" key={name}>
-            <button className={garmentPages.includes(page) ? "group-active" : ""} onClick={() => setGarmentOpen((open) => !open)}><Icon /><span>Garment Flow</span><ChevronDown className={garmentOpen ? "chevron open" : "chevron"} /></button>
-            {garmentOpen && <div className="nav-submenu garment-menu">
-              <button className={page === "Garment Dashboard" ? "active" : ""} onClick={() => selectPage("Garment Dashboard")}><LayoutDashboard />Dashboard</button>
-              <button className={page === "BOM" ? "active" : ""} onClick={() => selectPage("BOM")}><ClipboardList />BOM</button>
-              <button className={page === "Garment PO" ? "active" : ""} onClick={() => selectPage("Garment PO")}><ShoppingCart />PO</button>
-              <button className={page === "Materials Status" ? "active" : ""} onClick={() => selectPage("Materials Status")}><BarChart3 />Materials Status</button>
-              {[["Fabric", Boxes], ["Cutting", Scissors], ["Accessories", Sparkles], ["Elastic", Activity], ["Stitching", Factory], ["Finishing", Settings2], ["Packing", PackageCheck], ["Dispatch", Truck]].map(([label, SubIcon]) => <button key={label} className={page === label ? "active" : ""} onClick={() => selectPage(label)}><SubIcon />{label}</button>)}
-            </div>}
-          </div> : name === "Masters" ? <div className="nav-group" key={name}>
+          {navigation.filter(([, , roles]) => roles.includes(user?.role)).map(([name, Icon]) => name === "Masters" ? <div className="nav-group" key={name}>
             <button className={["Production Masters", "Machine Register", "Employee Register"].includes(page) ? "group-active" : ""} onClick={() => setMastersOpen((open) => !open)}><Icon /><span>Masters</span><ChevronDown className={mastersOpen ? "chevron open" : "chevron"} /></button>
             {mastersOpen && <div className="nav-submenu">
               <button className={page === "Production Masters" ? "active" : ""} onClick={() => selectPage("Production Masters")}>Production Master</button>

@@ -25,17 +25,10 @@ import AuditBackupPage from "../pages/saas/AuditBackupPage.jsx";
 import OnboardingPage from "../pages/saas/OnboardingPage.jsx";
 import SuperAdminDashboardPage from "../pages/saas/SuperAdminDashboardPage.jsx";
 import ProfileSettingsPage from "../pages/saas/ProfileSettingsPage.jsx";
-import GarmentFlowPage from "../pages/garments/GarmentFlowPage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
   switch (page) {
-    case "Garment Dashboard": return <GarmentFlowPage mode="dashboard" notify={notify} />;
-    case "BOM": return <GarmentFlowPage mode="bom" notify={notify} />;
-    case "Garment PO": return <GarmentFlowPage mode="po" notify={notify} />;
-    case "Materials Status": return <GarmentFlowPage mode="materials" notify={notify} />;
-    case "Fabric": case "Cutting": case "Accessories": case "Elastic": case "Stitching": case "Finishing": case "Packing": case "Dispatch":
-      return <GarmentFlowPage mode="department" department={page.toUpperCase()} notify={notify} />;
     case "SaaS Owner Dashboard":
       return <SuperAdminDashboardPage notify={notify} />;
     case "Companies":
