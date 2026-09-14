@@ -25,10 +25,13 @@ import AuditBackupPage from "../pages/saas/AuditBackupPage.jsx";
 import OnboardingPage from "../pages/saas/OnboardingPage.jsx";
 import SuperAdminDashboardPage from "../pages/saas/SuperAdminDashboardPage.jsx";
 import ProfileSettingsPage from "../pages/saas/ProfileSettingsPage.jsx";
+import GarmentFlowPage from "../pages/garment-flow/GarmentFlowPage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
   switch (page) {
+    case "Fabric Cutting Flow":
+      return <GarmentFlowPage notify={notify} />;
     case "SaaS Owner Dashboard":
       return <SuperAdminDashboardPage notify={notify} />;
     case "Companies":

@@ -16,7 +16,7 @@ function createToken(user) {
 function createAuthResponse(user) {
   return {
     token: createToken(user),
-    user: { _id: user._id, name: user.name, email: user.email, role: user.role, companyId: user.companyId, factoryId: user.factoryId, permissions: user.permissions || [] },
+    user: { _id: user._id, name: user.name, email: user.email, role: user.role, department: user.department, companyId: user.companyId, factoryId: user.factoryId, permissions: user.permissions || [] },
   };
 }
 
@@ -59,24 +59,23 @@ export async function register(request, response) {
   response.status(201).json(createAuthResponse(user));
 }
 
-export async function getUsers(_request, response) {
-  response.json(await User.find().select("name email role permissions active companyId factoryId createdAt").sort({ createdAt: 1 }));
+export async function getUsers(request, response) {
+  const query = request.user?.role === "saas_super_admin" ? {} : { companyId: request.user.companyId };\n  response.json(await User.find(query).select("name email role department reportingTo permissions active companyId factoryId createdAt").sort({ createdAt: 1 }));
 }
 
 export async function createUser(request, response) {
   const { name, email, password, role } = request.body;
-  const allowedRoles = ["company_admin", "admin", "store", "production_planner", "production_operator", "production", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"];
+  const allowedRoles = ["company_admin", "admin", "fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry", "elastic_admin", "elastic_entry", "accessories_admin", "accessories_entry", "store", "production_planner", "production_operator", "production", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"];
   if (!name || !email || !password || !allowedRoles.includes(role)) {
     throw new ApiError(400, "Name, email, password and a valid role are required");
   }
   if (await User.exists({ email: email.toLowerCase() })) throw new ApiError(409, "Email already registered");
   const user = await User.create({
     name, email, password: await bcrypt.hash(password, 12), role,
-    permissions: request.body.permissions || [],
-    companyId: request.body.companyId || request.user.companyId,
+    permissions: request.body.permissions || [],\n    department: request.body.department || "ACCESSORIES",\n    reportingTo: request.body.reportingTo || null,\n    companyId: request.body.companyId || request.user.companyId,
     factoryId: request.body.factoryId || request.user.factoryId,
   });
-  response.status(201).json({ _id: user._id, name: user.name, email: user.email, role: user.role });
+  response.status(201).json({ _id: user._id, name: user.name, email: user.email, role: user.role, department: user.department, companyId: user.companyId, factoryId: user.factoryId });
 }
 
 export async function forgotPassword(request, response) {
@@ -152,7 +151,7 @@ export async function login(request, response) {
 }
 
 export async function getProfile(request, response) {
-  const user = await User.findById(request.user.id).select("name email role permissions active companyId factoryId createdAt").lean();
+  const user = await User.findById(request.user.id).select("name email role department reportingTo permissions active companyId factoryId createdAt").lean();
   if (!user) throw new ApiError(404, "Profile not found");
   response.json(user);
 }
@@ -165,7 +164,7 @@ export async function updateProfile(request, response) {
     if (request.body.password.length < 8) throw new ApiError(400, "Password must contain at least 8 characters");
     updates.password = await bcrypt.hash(request.body.password, 12);
   }
-  const user = await User.findByIdAndUpdate(request.user.id, updates, { new: true, runValidators: true }).select("name email role permissions active companyId factoryId createdAt");
+  const user = await User.findByIdAndUpdate(request.user.id, updates, { new: true, runValidators: true }).select("name email role department reportingTo permissions active companyId factoryId createdAt");
   if (!user) throw new ApiError(404, "Profile not found");
   response.json(user);
 }
