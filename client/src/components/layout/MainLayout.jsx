@@ -32,7 +32,8 @@ import { useLanguage } from "../../context/LanguageContext.jsx";
 const navigation = [
   ["Modules", Sparkles, ["saas_super_admin", "company_admin", "admin"]],
   ["Dashboard", LayoutDashboard, ["saas_super_admin", "company_admin", "admin", "store", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"]],
-  ["Inward", ArrowDownToLine, ["saas_super_admin", "company_admin", "admin", "store"]],
+  ["Fabric Cutting Flow", Scissors, ["saas_super_admin", "company_admin", "admin", "fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry", "elastic_admin", "elastic_entry", "management", "view_only"]],
+  ["Inward", ArrowDownToLine, ["saas_super_admin", "company_admin", "admin", "store", "accessories_admin", "accessories_entry"]],
   ["PO", ShoppingCart, ["saas_super_admin", "company_admin", "admin", "store"]],
   ["PO Pending", Clock3, ["saas_super_admin", "company_admin", "admin", "store"]],
   ["Print", Printer, ["saas_super_admin", "company_admin", "admin", "store"]],
@@ -81,8 +82,8 @@ export default function MainLayout({ page, onPageChange, children }) {
             <Sparkles />
           </span>
           <div className="brand-copy">
-            <b className="brand-title">Accessories Flow</b>
-            <small className="brand-subtitle">ACCESSORIES MANAGER</small>
+            <b className="brand-title">Unified Garment Flow</b>
+            <small className="brand-subtitle">FABRIC · CUTTING · ELASTIC · ACCESSORIES</small>
           </div>
           <button className="brand-close" onClick={() => setMenuOpen(false)}>
             <X />
@@ -129,7 +130,7 @@ export default function MainLayout({ page, onPageChange, children }) {
             <Menu />
           </button>
           <div>
-            <small>{user?.role?.includes("production") ? "Elastic Production" : "Accessories Flow SaaS"}</small>
+            <small>{user?.role?.includes("production") ? "Elastic Production" : "Unified Garment SaaS"}</small>
             <h1>{page === "Production Dashboard" ? "Dashboard" : page}</h1>
           </div>
         </header>
