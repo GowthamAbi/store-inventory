@@ -4,11 +4,11 @@ import morgan from "morgan";
 
 import apiRoutes from "./routes/index.js";
 
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import {
-  errorHandler,
-  notFoundHandler,
-} from "./middleware/errorHandler.js";
-import { securityHeaders } from "./middleware/securityMiddleware.js";
+  securityHeaders,
+  trustedMutationOrigin,
+} from "./middleware/securityMiddleware.js";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -19,18 +19,24 @@ app.use(securityHeaders);
 // CORS
 // ==========================================
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://store-inventory-app.netlify.app",
+const normalizeOrigin = (url) =>
+  String(url || "")
+    .trim()
+    .replace(/\/$/, "");
 
-  ...(process.env.CLIENT_URL
-    ? process.env.CLIENT_URL
-        .split(",")
-        .map((url) => url.trim().replace(/\/$/, ""))
-    : []),
-];
+const allowedOrigins = new Set(
+  [
+    "http://localhost:5173",
+    "https://store-inventory-app.netlify.app",
+    "https://garmentsaas.netlify.app",
 
-console.log("Allowed CORS origins:", allowedOrigins);
+    ...(process.env.CLIENT_URL
+      ? process.env.CLIENT_URL.split(",").map(normalizeOrigin).filter(Boolean)
+      : []),
+  ].map(normalizeOrigin),
+);
+
+console.log("Allowed CORS origins:", [...allowedOrigins]);
 
 app.use(
   cors({
@@ -41,46 +47,26 @@ app.use(
         return callback(null, true);
       }
 
-      const normalizedOrigin =
-        origin.replace(/\/$/, "");
+      const normalizedOrigin = normalizeOrigin(origin);
 
-      if (
-        allowedOrigins.includes(
-          normalizedOrigin
-        )
-      ) {
+      if (allowedOrigins.has(normalizedOrigin)) {
         return callback(null, true);
       }
 
-      console.error(
-        "CORS blocked origin:",
-        origin
-      );
+      console.error("CORS blocked origin:", origin);
 
-      return callback(
-        new Error(
-          `CORS not allowed for origin: ${origin}`
-        )
-      );
+      return callback(new Error(`CORS not allowed for origin: ${origin}`));
     },
 
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS",
-    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-    ],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Company-Key", "X-CSRF-Token"],
 
     credentials: true,
-  })
+  }),
 );
+
+app.use(trustedMutationOrigin(allowedOrigins));
 
 // ==========================================
 // BODY PARSER
@@ -90,15 +76,16 @@ app.use(
   express.json({
     limit: "10mb",
     verify(request, _response, buffer) {
-      if (request.originalUrl === "/api/webhooks/razorpay") request.rawBody = buffer.toString("utf8");
+      if (request.originalUrl === "/api/webhooks/razorpay")
+        request.rawBody = buffer.toString("utf8");
     },
-  })
+  }),
 );
 
 app.use(
   express.urlencoded({
     extended: true,
-  })
+  }),
 );
 
 // ==========================================
@@ -114,8 +101,8 @@ app.use(morgan("dev"));
 app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
-    message:
-      "Store Inventory API is running",
+    message: "UG SaaS multi-tenant ERP API is running",
+    tenancy: "database-per-company",
   });
 });
 

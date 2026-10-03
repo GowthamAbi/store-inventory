@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const eventSchema = new mongoose.Schema(
   {
@@ -20,16 +21,20 @@ const productionJobSchema = new mongoose.Schema(
     section: { type: String, required: true },
     colour: { type: String, required: true, uppercase: true },
     size: { type: String, required: true, uppercase: true },
-    sizePlan: [{
-      size: { type: String, required: true, uppercase: true, trim: true },
-      plannedPcs: { type: Number, required: true, min: 1 },
-    }],
-    completionBySize: [{
-      size: { type: String, required: true, uppercase: true },
-      okPcs: { type: Number, default: 0, min: 0 },
-      reworkPcs: { type: Number, default: 0, min: 0 },
-      rejectionPcs: { type: Number, default: 0, min: 0 },
-    }],
+    sizePlan: [
+      {
+        size: { type: String, required: true, uppercase: true, trim: true },
+        plannedPcs: { type: Number, required: true, min: 1 },
+      },
+    ],
+    completionBySize: [
+      {
+        size: { type: String, required: true, uppercase: true },
+        okPcs: { type: Number, default: 0, min: 0 },
+        reworkPcs: { type: Number, default: 0, min: 0 },
+        rejectionPcs: { type: Number, default: 0, min: 0 },
+      },
+    ],
     plannedPcs: { type: Number, required: true, min: 1 },
     machineCode: { type: String, required: true, uppercase: true },
     employeeCode: { type: String, required: true, uppercase: true },
@@ -43,7 +48,18 @@ const productionJobSchema = new mongoose.Schema(
     balancePcs: { type: Number, required: true, min: 0 },
     status: {
       type: String,
-      enum: ["Running", "Breakdown", "Thread Change", "Bobbin Change", "Box Change", "Size Change", "Other Change", "Partially Completed", "Completed", "Rejected"],
+      enum: [
+        "Running",
+        "Breakdown",
+        "Thread Change",
+        "Bobbin Change",
+        "Box Change",
+        "Size Change",
+        "Other Change",
+        "Partially Completed",
+        "Completed",
+        "Rejected",
+      ],
       default: "Running",
     },
     events: [eventSchema],
@@ -53,4 +69,4 @@ const productionJobSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model("ProductionJob", productionJobSchema);
+export default createTenantModel("ProductionJob", productionJobSchema);

@@ -4,20 +4,85 @@ import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 import crypto from "node:crypto";
 import Company from "../models/Company.js";
+import { clearLoginAttempts } from "../middleware/securityMiddleware.js";
+import { getTenant } from "../utils/tenantContext.js";
+import { assertStrongPassword } from "../utils/passwordPolicy.js";
+import { generateUserId } from "../utils/generateUserId.js";
+import { issueEmailVerification } from "../services/accountEmailService.js";
 
 function createToken(user) {
+  const tenant = getTenant();
   return jwt.sign(
-    { id: user._id, name: user.name, role: user.role, companyId: user.companyId, factoryId: user.factoryId, permissions: user.permissions },
+    {
+      id: user._id,
+      userId: user.userId,
+      name: user.name,
+      role: user.role,
+      companyId: user.companyId,
+      factoryId: user.factoryId,
+      permissions: user.permissions,
+      department: user.department,
+      sessionVersion: Number(user.sessionVersion || 0),
+      companyKey: tenant.companyKey || "platform",
+      databaseName: tenant.databaseName || process.env.CONTROL_DB_NAME || "ugs_control",
+    },
     process.env.JWT_SECRET,
-    { expiresIn: "7d" },
+    {
+      expiresIn: "8h",
+      issuer: "ug-saas-api",
+      audience: "ug-saas-web",
+    },
   );
 }
 
-function createAuthResponse(user) {
+function sessionCookieName() {
+  return process.env.NODE_ENV === "production"
+    ? "__Host-ug_session"
+    : "ug_session";
+}
+
+function sessionCookieOptions() {
+  const production = process.env.NODE_ENV === "production";
+
   return {
-    token: createToken(user),
-    user: { _id: user._id, name: user.name, email: user.email, role: user.role, companyId: user.companyId, factoryId: user.factoryId, permissions: user.permissions || [] },
+    httpOnly: true,
+    secure: production,
+    sameSite: production ? "none" : "lax",
+    partitioned: production,
+    path: "/",
+    maxAge: 8 * 60 * 60 * 1000,
   };
+}
+
+function createUserResponse(user, companyName = "UG SaaS") {
+  const tenant = getTenant();
+  return {
+    user: {
+      _id: user._id,
+      userId: user.userId,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      companyId: user.companyId,
+      factoryId: user.factoryId,
+      permissions: user.permissions || [],
+      department: user.department || "",
+      companyName,
+      companyKey: tenant.companyKey || "platform",
+      loginPath: tenant.companyKey && tenant.companyKey !== "platform"
+        ? `/c/${tenant.companyKey}/login`
+        : "/login",
+    },
+  };
+}
+
+function startSession(response, user, companyName) {
+  response.cookie(
+    sessionCookieName(),
+    createToken(user),
+    sessionCookieOptions(),
+  );
+  return createUserResponse(user, companyName);
 }
 
 export async function getSetupStatus(_request, response) {
@@ -25,15 +90,25 @@ export async function getSetupStatus(_request, response) {
 }
 
 export async function register(request, response) {
-  const { name, email, password, companyName = "Accessories Flow", factoryName = "Main Factory" } = request.body;
+  const {
+    name,
+    email,
+    password,
+    companyName = "UG SaaS",
+    factoryName = "Main Factory",
+  } = request.body;
 
   if (!name || !email || !password) {
     throw new ApiError(400, "Name, email and password are required");
   }
+  assertStrongPassword(password, { name, email, userId: "UGS-OWN" });
 
   const userCount = await User.countDocuments();
   if (userCount > 0) {
-    throw new ApiError(403, "Company setup is complete. Ask the admin to create your account");
+    throw new ApiError(
+      403,
+      "Company setup is complete. Ask the admin to create your account",
+    );
   }
   if (await User.exists({ email: email.toLowerCase() })) {
     throw new ApiError(409, "Email already registered");
@@ -45,9 +120,16 @@ export async function register(request, response) {
     company.factories = [{ name: factoryName, code: "MAIN" }];
     await company.save();
   } else {
-    company = await Company.create({ companyName, subscriptionStartsAt: new Date(), subscriptionEndsAt: new Date(Date.now() + 14 * 86400000), factories: [{ name: factoryName, code: "MAIN" }] });
+    company = await Company.create({
+      companyName,
+      subscriptionStartsAt: new Date(),
+      subscriptionEndsAt: new Date(Date.now() + 14 * 86400000),
+      factories: [{ name: factoryName, code: "MAIN" }],
+    });
   }
+  const userId = await generateUserId({ name, department: "PLATFORM", role: "saas_super_admin" });
   const user = await User.create({
+    userId,
     name,
     email,
     password: await bcrypt.hash(password, 12),
@@ -56,45 +138,136 @@ export async function register(request, response) {
     factoryId: company.factories[0]._id,
   });
 
-  response.status(201).json(createAuthResponse(user));
+  response.status(201).json(startSession(response, user, company.companyName));
 }
 
 export async function getUsers(_request, response) {
-  response.json(await User.find().select("name email role permissions active companyId factoryId createdAt").sort({ createdAt: 1 }));
+  response.json(
+    await User.find()
+      .select(
+        "userId name email emailVerified role department permissions active accountStatus companyId factoryId createdAt lastLoginAt",
+      )
+      .sort({ createdAt: 1 }),
+  );
 }
 
 export async function createUser(request, response) {
   const { name, email, password, role } = request.body;
-  const allowedRoles = ["company_admin", "admin", "store", "production_planner", "production_operator", "production", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"];
+  const allowedRoles = [
+    "company_admin",
+    "admin",
+    "store",
+    "production_planner",
+    "production_operator",
+    "production",
+    "supervisor",
+    "quality",
+    "maintenance",
+    "sewing_coordinator",
+    "fabric_admin",
+    "fabric_entry",
+    "cutting_admin",
+    "cutting_entry",
+    "accessories_admin",
+    "accessories_entry",
+    "elastic_admin",
+    "elastic_entry",
+    "stitching_admin",
+    "stitching_entry",
+    "delivery_admin",
+    "delivery_entry",
+    "management",
+    "view_only",
+    "department_incharge",
+    "department_entry",
+  ];
   if (!name || !email || !password || !allowedRoles.includes(role)) {
-    throw new ApiError(400, "Name, email, password and a valid role are required");
+    throw new ApiError(
+      400,
+      "Name, email, password and a valid role are required",
+    );
   }
-  if (await User.exists({ email: email.toLowerCase() })) throw new ApiError(409, "Email already registered");
+  assertStrongPassword(password, { name, email });
+  if (await User.exists({ email: email.toLowerCase() }))
+    throw new ApiError(409, "Email already registered");
+  const targetCompanyId =
+    request.user.role === "saas_super_admin"
+      ? request.body.companyId || request.user.companyId
+      : request.user.companyId;
+  const targetFactoryId =
+    request.user.role === "saas_super_admin"
+      ? request.body.factoryId || request.user.factoryId
+      : request.user.factoryId;
+  const userId = await generateUserId({ name, department: request.body.department, role });
   const user = await User.create({
-    name, email, password: await bcrypt.hash(password, 12), role,
+    userId,
+    name,
+    email,
+    password: await bcrypt.hash(password, 12),
+    role,
+    emailVerified: false,
+    accountStatus: "INVITED",
     permissions: request.body.permissions || [],
-    companyId: request.body.companyId || request.user.companyId,
-    factoryId: request.body.factoryId || request.user.factoryId,
+    department: request.body.department || "",
+    companyId: targetCompanyId,
+    factoryId: targetFactoryId,
   });
-  response.status(201).json({ _id: user._id, name: user.name, email: user.email, role: user.role });
+  const activationUrl = await issueEmailVerification(user, getTenant().companyKey);
+  response.status(201).json({
+    _id: user._id,
+    userId: user.userId,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    message: "User created. Activation link sent to the registered email.",
+    ...(process.env.NODE_ENV !== "production" && { activationUrl }),
+  });
+}
+
+export async function verifyEmail(request, response) {
+  const token = String(request.body.token || "");
+  if (!token) throw new ApiError(400, "Verification token is required");
+  const hashed = crypto.createHash("sha256").update(token).digest("hex");
+  const user = await User.findOne({
+    emailVerificationToken: hashed,
+    emailVerificationExpires: { $gt: new Date() },
+  }).select("+emailVerificationToken");
+  if (!user) throw new ApiError(400, "Verification link is invalid or expired");
+  user.emailVerified = true;
+  user.accountStatus = "ACTIVE";
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpires = undefined;
+  await user.save();
+  response.json({ message: "Email verified. You can now login with your User ID." });
 }
 
 export async function forgotPassword(request, response) {
-  const email = request.body.email?.trim().toLowerCase();
-  if (!email) throw new ApiError(400, "Email is required");
-
-  const user = await User.findOne({ email });
+  const identifier = String(request.body.userId || request.body.email || "").trim();
+  if (!identifier) throw new ApiError(400, "User ID is required");
+  const user = await User.findOne(
+    identifier.includes("@")
+      ? { email: identifier.toLowerCase() }
+      : { userId: identifier.toUpperCase() },
+  );
   if (!user) {
-    return response.json({ message: "If the email exists, a reset link has been created" });
+    return response.json({
+      message: "If the email exists, a reset link has been created",
+    });
   }
 
   const rawToken = crypto.randomBytes(32).toString("hex");
-  user.resetPasswordToken = crypto.createHash("sha256").update(rawToken).digest("hex");
-  user.resetPasswordExpires = new Date(Date.now() + 30 * 60 * 1000);
+  user.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(rawToken)
+    .digest("hex");
+  user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
   await user.save();
 
-  const clientUrl = (process.env.CLIENT_URL || "http://localhost:5173").split(",")[0].replace(/\/$/, "");
-  const resetUrl = `${clientUrl}/?resetToken=${rawToken}`;
+  const clientUrl = (process.env.CLIENT_URL || "http://localhost:5173")
+    .split(",")[0]
+    .replace(/\/$/, "");
+  const companyKey = getTenant().companyKey || "platform";
+  const resetUrl = `${clientUrl}/c/${companyKey}/login?resetToken=${rawToken}`;
 
   if (process.env.RESEND_API_KEY && process.env.EMAIL_FROM) {
     await fetch("https://api.resend.com/emails", {
@@ -106,8 +279,8 @@ export async function forgotPassword(request, response) {
       body: JSON.stringify({
         from: process.env.EMAIL_FROM,
         to: [user.email],
-        subject: "Accessories Flow password reset",
-        html: `<p>Use this link within 30 minutes:</p><p><a href="${resetUrl}">Reset password</a></p>`,
+        subject: "UG SaaS password reset",
+        html: `<p>Use this one-time link within 15 minutes:</p><p><a href="${resetUrl}">Reset password</a></p><p>If you did not request this, contact your administrator.</p>`,
       }),
     });
   }
@@ -120,16 +293,25 @@ export async function forgotPassword(request, response) {
 
 export async function resetPassword(request, response) {
   const { token, password } = request.body;
-  if (!token || !password || password.length < 6) {
-    throw new ApiError(400, "Valid token and minimum 6 character password are required");
-  }
+  if (!token || !password) throw new ApiError(400, "Valid token and password are required");
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
   const user = await User.findOne({
     resetPasswordToken: hashedToken,
     resetPasswordExpires: { $gt: new Date() },
   });
   if (!user) throw new ApiError(400, "Reset link is invalid or expired");
+  assertStrongPassword(password, user);
+  for (const previous of user.passwordHistory?.slice(-5) || []) {
+    if (await bcrypt.compare(password, previous.hash))
+      throw new ApiError(400, "You cannot reuse one of your last five passwords");
+  }
+  user.passwordHistory = [
+    ...(user.passwordHistory || []).slice(-4),
+    { hash: user.password, changedAt: new Date() },
+  ];
   user.password = await bcrypt.hash(password, 12);
+  user.passwordChangedAt = new Date();
+  user.sessionVersion = Number(user.sessionVersion || 0) + 1;
   user.resetPasswordToken = "";
   user.resetPasswordExpires = undefined;
   await user.save();
@@ -137,22 +319,74 @@ export async function resetPassword(request, response) {
 }
 
 export async function login(request, response) {
-  const user = await User.findOne({ email: request.body.email?.toLowerCase() });
+  const userId = String(request.body.userId || "").trim().toUpperCase();
+  if (!userId) throw new ApiError(400, "Company and User ID are required");
+  const user = await User.findOne({
+    userId,
+  }).select("+sessionVersion +failedLoginCount +lockedUntil");
+  if (user?.lockedUntil && user.lockedUntil > new Date())
+    throw new ApiError(423, "Account is temporarily locked. Try again later or reset your password");
   const validPassword =
     user && (await bcrypt.compare(request.body.password || "", user.password));
 
-  if (!validPassword) throw new ApiError(401, "Incorrect email or password");
-  if (!user.active) throw new ApiError(403, "This user account is disabled");
-  if (user.role !== "saas_super_admin") {
-    const company = await Company.findById(user.companyId).lean();
-    const expired = company?.subscriptionEndsAt && new Date(company.subscriptionEndsAt) < new Date();
-    if (!company?.active || company?.subscriptionStatus !== "Active" || expired) throw new ApiError(402, "Company subscription is inactive or expired");
+  if (!validPassword) {
+    if (user) {
+      user.failedLoginCount = Number(user.failedLoginCount || 0) + 1;
+      if (user.failedLoginCount >= 5) {
+        user.lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+        user.accountStatus = "LOCKED";
+      }
+      await user.save();
+    }
+    throw new ApiError(401, "Incorrect Company, User ID or password");
   }
-  response.json(createAuthResponse(user));
+  if (!user.active) throw new ApiError(403, "This user account is disabled");
+  if (!user.emailVerified && user.role !== "saas_super_admin")
+    throw new ApiError(403, "Verify your registered email before login");
+  const company = await Company.findById(user.companyId).lean();
+  if (user.role !== "saas_super_admin") {
+    const expired =
+      company?.subscriptionEndsAt &&
+      new Date(company.subscriptionEndsAt) < new Date();
+    if (!company?.active || company?.subscriptionStatus !== "Active" || expired)
+      throw new ApiError(402, "Company subscription is inactive or expired");
+  }
+  clearLoginAttempts(request);
+  user.failedLoginCount = 0;
+  user.lockedUntil = undefined;
+  user.accountStatus = "ACTIVE";
+  user.lastLoginAt = new Date();
+  await user.save();
+  response.json(startSession(response, user, company?.companyName));
+}
+
+export async function getSession(request, response) {
+  const user = await User.findById(request.user.id)
+    .select("userId name email emailVerified role department permissions active companyId factoryId")
+    .lean();
+  if (!user?.active) throw new ApiError(401, "Session is no longer active");
+
+  const company = await Company.findById(user.companyId)
+    .select("companyName active subscriptionStatus subscriptionEndsAt")
+    .lean();
+
+  response.json(createUserResponse(user, company?.companyName));
+}
+
+export async function logout(request, response) {
+  await User.findByIdAndUpdate(request.user.id, {
+    $inc: { sessionVersion: 1 },
+  });
+  response.clearCookie(sessionCookieName(), sessionCookieOptions());
+  response.status(204).end();
 }
 
 export async function getProfile(request, response) {
-  const user = await User.findById(request.user.id).select("name email role permissions active companyId factoryId createdAt").lean();
+  const user = await User.findById(request.user.id)
+    .select(
+      "userId name email emailVerified role department permissions active accountStatus companyId factoryId createdAt lastLoginAt",
+    )
+    .lean();
   if (!user) throw new ApiError(404, "Profile not found");
   response.json(user);
 }
@@ -160,12 +394,22 @@ export async function getProfile(request, response) {
 export async function updateProfile(request, response) {
   const updates = {};
   if (request.body.name?.trim()) updates.name = request.body.name.trim();
-  if (request.body.email?.trim()) updates.email = request.body.email.trim().toLowerCase();
+  if (request.body.email?.trim())
+    updates.email = request.body.email.trim().toLowerCase();
   if (request.body.password) {
-    if (request.body.password.length < 8) throw new ApiError(400, "Password must contain at least 8 characters");
+    assertStrongPassword(request.body.password, { ...request.user, ...updates });
     updates.password = await bcrypt.hash(request.body.password, 12);
+    updates.passwordChangedAt = new Date();
   }
-  const user = await User.findByIdAndUpdate(request.user.id, updates, { new: true, runValidators: true }).select("name email role permissions active companyId factoryId createdAt");
+  const updateQuery = request.body.password
+    ? { $set: updates, $inc: { sessionVersion: 1 } }
+    : { $set: updates };
+  const user = await User.findByIdAndUpdate(request.user.id, updateQuery, {
+    new: true,
+    runValidators: true,
+  }).select(
+    "name email role department permissions active companyId factoryId createdAt",
+  );
   if (!user) throw new ApiError(404, "Profile not found");
   response.json(user);
 }

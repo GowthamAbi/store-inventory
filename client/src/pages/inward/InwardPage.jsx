@@ -111,7 +111,11 @@ export default function InwardPage({ notify }) {
 
   async function submitInward() {
     const invalidRow = rows.find(
-      (row) => !row.poNo || !row.itemCode || !row.inwardQty || Number(row.inwardQty) <= 0,
+      (row) =>
+        !row.poNo ||
+        !row.itemCode ||
+        !row.inwardQty ||
+        Number(row.inwardQty) <= 0,
     );
 
     if (invalidRow) {
@@ -322,7 +326,7 @@ export default function InwardPage({ notify }) {
 
           <div className="qr-label card" id="inward-qr-label">
             <div className="qr-label-header">
-              <h3>Accessories Flow Inward Label</h3>
+              <h3>UG SaaS Inward Label</h3>
               <span>Unique stock identity</span>
             </div>
 

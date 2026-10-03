@@ -1,6 +1,68 @@
-# Accessories Flow — Accessories Store Manager
+# Garment Production Flow SaaS — Full MERN Source
 
-Readable MERN project with separate `client` and `server` folders.
+Readable MVC-style MERN project with separate `client` and `server` folders. It
+merges Fabric, Cutting, Elastic, Accessories and garment delivery traceability
+under one multi-company SaaS login.
+
+## Role layout
+
+- `saas_super_admin`: companies, subscriptions and SaaS control.
+- `company_admin`: department dashboard, Reports, Timeline, Stock, Approvals,
+  Item/Fabric/Process Masters, users and Subscription menu. Operational entry
+  is blocked by the backend.
+- `department_incharge`: assigned department monitoring, history, timeline,
+  status, stock, reports and approvals.
+- `department_entry`: assigned department entry and print workflow only.
+- Existing Store and Production roles remain compatible.
+
+Creating a new department account never replaces existing data. It reads the
+same company/factory/department history and appends new audited records.
+
+## Fabric to cutting workflow
+
+1. Fabric Master stores only Fabric Code, Fabric Name and Fabric Group. Item,
+   Sample, Company Name and Company Type fields are intentionally excluded.
+2. Compacting and Dyeing use a separate Code → Name Process Master.
+3. Common Item Master stores Item Code/Name, Fabric Group, and mandatory
+   size-wise Dia, cutting/folding weight, elastic measurement/ranges and
+   per-piece accessories.
+4. Fabric Inward generates an inward number and records DC No, Lot DC No,
+   Compacting/Dyeing and multiple colours with Dia-wise Sample Rolls/KG and Lot
+   Rolls/KG. Reference Name, Supplier and Item Name are excluded.
+5. Every roll receives a unique QR containing Inward No, Sample/Lot, Fabric
+   Group, Roll No, average weight, Colour, Dyeing and Compacting names.
+6. Production Plan reads the approved Item Master by Item Code. The operator
+   enters Size + PCS; Dia is resolved automatically from Item Master. Fresh Lot uses
+   cutting weight; Folding Lot uses cutting + folding weight. It divides PCS
+   evenly and automatically reallocates from a low-stock colour to other
+   selected colours. Every reservation checks the exact Fabric Group + Colour +
+   Dia stock. Insufficient matching stock blocks saving.
+   Plan No is an automatic four-digit tenant sequence. Saving reserves the
+   required colour stock, while edit/delete recalculates or releases that
+   reservation. Once fabric is physically issued, edit/delete is blocked.
+7. Fabric Issue consumes the scanned inward and colour through FIFO roll stock.
+8. Cutting Actual uses one consolidated row per colour and dynamic size
+   columns. Actual KG is calculated from Actual PCS × item piece weight. Bundle
+   count/weight are entered, and Actual KG minus Bundle KG is saved by
+   Plan/DC/Colour/Size in Fabric Waste Warehouse. Negative waste is blocked.
+9. Elastic Requirement reads actual cutting PCS and approved size-wise elastic
+   measurement, then produces a professional printable/CSV/PDF wanted-MTR sheet.
+
+An inward whose roll stock has already been issued cannot be edited; use an
+adjustment entry so historic stock and audit traceability remain correct.
+
+The old Garment Flow sidebar and pages are removed. Underlying historical
+traceability collections remain because Fabric/Cutting/Elastic data references
+them. Fabric receipt and roll labels use dedicated A4 layouts with Print and PDF
+download, plus date-range/DC/fabric/type filters. Production Plan has separate
+Data Entry and professional A4 Print/PDF pages. Fabric and Cutting roles also
+have department-scoped History and Print pages.
+
+The Cutting sidebar groups Production Plan into Data Entry, Print and History.
+The print sheet shows a consolidated Colour/PCS/KG summary, a Size/Dia/PCS/KG
+summary, and a Size/Dia/Colour detail table. It supports multi-page A4 output
+and excludes internal available-stock figures. Fabric Stock is Dia-wise and
+shows Gross, Reserved and Available KG with Excel, Print and PDF.
 
 ## Elastic Cutting DC workflow
 
@@ -33,6 +95,10 @@ Readable MERN project with separate `client` and `server` folders.
 5. Every role uses the same Login page. The server reads the role from the authenticated database account and opens only the permitted layout:
    - `saas_super_admin` → SaaS Owner Console
    - `company_admin` / `admin` → Company module selector and administration
+   - `fabric_admin` / `fabric_entry` → Fabric master and inward operations
+   - `cutting_admin` / `cutting_entry` → Fabric issue and cutting actual
+   - `elastic_admin` / `elastic_entry` → Elastic requirements and operations
+   - `accessories_admin` / `accessories_entry` → Accessories operations
    - `store` → Store dashboard, PO, inward, outward, stock and print
    - `production` and production roles → Production dashboard, machines, Cutting DC, warehouses and sewing delivery
 6. Forgot Password also uses the same registered email. In production, configure `RESEND_API_KEY` and `EMAIL_FROM` to deliver the reset link.
@@ -42,6 +108,20 @@ Do not create separate public login URLs for each role. One login form plus serv
 ### Production environment variables
 
 Set `MONGODB_URI`, a long random `JWT_SECRET`, exact HTTPS `CLIENT_URL`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `RESEND_API_KEY`, and `EMAIL_FROM` on Render. Never commit real secrets. Configure the Razorpay webhook URL as `/api/webhooks/razorpay`. Netlify and Render must both use HTTPS.
+
+## UG SaaS commercial console
+
+- Public showcase and pricing page: `/demo` (also available at `/pricing` and `/try-demo`).
+- Trial registration creates an isolated customer company and company-admin login. Access is automatically blocked when the configured Trial validity expires.
+- Owner-managed plans: Trial, Starter, Professional, Business, Enterprise, and Setup & Training. Price, internal cost, setup fee, tax, validity, users, departments, and modules can be edited without code changes.
+- Two payment methods are supported:
+  - **Manual Payment** creates a pending transaction. Only the SaaS Owner can approve it and activate the subscription.
+  - **Razorpay** creates an order and activates the subscription only after server-side signature verification or a verified webhook.
+- Owner analytics include companies, active users, trials, new requests, revenue, estimated profit, pending payments, plan performance, and renewal alerts.
+- Lead CRM records calls, emails, WhatsApp, visits, requirements, customisations, remarks, follow-up dates, and conversion status.
+- Subscription controls support activation, pause, revoke, and archive from Company Management.
+
+For Razorpay, create a webhook for `payment.captured` at `https://YOUR-RENDER-URL/api/webhooks/razorpay`. Keep `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` on the server only.
 
 ### Backup responsibility
 

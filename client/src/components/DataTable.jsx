@@ -1,5 +1,19 @@
 import { useMemo, useState } from "react";
 
+function displayValue(value) {
+  if (value === null || value === undefined || value === "") return "—";
+  if (typeof value !== "object") return value;
+
+  return (
+    value.companyName ||
+    value.name ||
+    value.label ||
+    value.code ||
+    value._id ||
+    JSON.stringify(value)
+  );
+}
+
 export default function DataTable({
   columns,
   rows,
@@ -13,7 +27,7 @@ export default function DataTable({
   const valueFor = (row, column) =>
     typeof column.filterValue === "function"
       ? column.filterValue(row)
-      : row[column.key];
+      : displayValue(row[column.key]);
 
   const filteredRows = useMemo(
     () =>
@@ -37,7 +51,11 @@ export default function DataTable({
                 <button
                   type="button"
                   className={columnFilters[column.key] ? "active" : ""}
-                  onClick={() => setOpenFilter((current) => current === column.key ? "" : column.key)}
+                  onClick={() =>
+                    setOpenFilter((current) =>
+                      current === column.key ? "" : column.key,
+                    )
+                  }
                 >
                   {column.label} <span>▼</span>
                 </button>
@@ -46,16 +64,29 @@ export default function DataTable({
                     autoFocus
                     value={columnFilters[column.key] || ""}
                     onChange={(event) => {
-                      setColumnFilters((current) => ({ ...current, [column.key]: event.target.value }));
+                      setColumnFilters((current) => ({
+                        ...current,
+                        [column.key]: event.target.value,
+                      }));
                       setOpenFilter("");
                     }}
                     onBlur={() => setOpenFilter("")}
                   >
                     <option value="">All</option>
-                    {[...new Set(rows.map((row) => String(valueFor(row, column) ?? "")))]
+                    {[
+                      ...new Set(
+                        rows.map((row) => String(valueFor(row, column) ?? "")),
+                      ),
+                    ]
                       .filter(Boolean)
-                      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-                      .map((value) => <option key={value} value={value.toLowerCase()}>{value}</option>)}
+                      .sort((a, b) =>
+                        a.localeCompare(b, undefined, { numeric: true }),
+                      )
+                      .map((value) => (
+                        <option key={value} value={value.toLowerCase()}>
+                          {value}
+                        </option>
+                      ))}
                   </select>
                 )}
               </th>
@@ -81,7 +112,7 @@ export default function DataTable({
                   <td key={column.key}>
                     {typeof column.render === "function"
                       ? column.render(row)
-                      : (row[column.key] ?? "—")}
+                      : displayValue(row[column.key])}
                   </td>
                 ))}
                 {(onEdit || onDelete) && (
@@ -100,7 +131,10 @@ export default function DataTable({
             ))
           ) : (
             <tr>
-              <td className="empty" colSpan={columns.length + (onEdit || onDelete ? 1 : 0)}>
+              <td
+                className="empty"
+                colSpan={columns.length + (onEdit || onDelete ? 1 : 0)}
+              >
                 {empty}
               </td>
             </tr>

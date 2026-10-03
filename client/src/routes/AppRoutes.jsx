@@ -25,16 +25,227 @@ import AuditBackupPage from "../pages/saas/AuditBackupPage.jsx";
 import OnboardingPage from "../pages/saas/OnboardingPage.jsx";
 import SuperAdminDashboardPage from "../pages/saas/SuperAdminDashboardPage.jsx";
 import ProfileSettingsPage from "../pages/saas/ProfileSettingsPage.jsx";
+import FabricCuttingPage from "../pages/fabric/FabricCuttingPage.jsx";
+import FabricMasterPage from "../pages/fabric/FabricMasterPage.jsx";
+import FabricInwardPage from "../pages/fabric/FabricInwardPage.jsx";
+import GarmentItemMasterPage from "../pages/master/GarmentItemMasterPage.jsx";
+import CompanyAdminDashboardPage from "../pages/dashboard/CompanyAdminDashboardPage.jsx";
+import DepartmentDashboardPage from "../pages/dashboard/DepartmentDashboardPage.jsx";
+import CompanyInsightsPage from "../pages/dashboard/CompanyInsightsPage.jsx";
+import SubscriptionCenterPage from "../pages/saas/SubscriptionCenterPage.jsx";
+import ProductionPlanEntryPage from "../pages/fabric/ProductionPlanEntryPage.jsx";
+import ProductionPlanPrintPage from "../pages/fabric/ProductionPlanPrintPage.jsx";
+import DepartmentRecordPage from "../pages/fabric/DepartmentRecordPage.jsx";
+import ProductionPlanHistoryPage from "../pages/fabric/ProductionPlanHistoryPage.jsx";
+import FabricStockPage from "../pages/fabric/FabricStockPage.jsx";
+import DepartmentPlanPrintPage from "../pages/fabric/DepartmentPlanPrintPage.jsx";
+import FoldingEntryPage from "../pages/fabric/FoldingEntryPage.jsx";
+import CuttingStockPage from "../pages/fabric/CuttingStockPage.jsx";
+import FabricQrPrintPage from "../pages/fabric/FabricQrPrintPage.jsx";
+import CuttingMachinePlanPage from "../pages/production/CuttingMachinePlanPage.jsx";
+import DeliveryDepartmentPage from "../pages/delivery/DeliveryDepartmentPage.jsx";
+import DepartmentOverviewPage from "../pages/dashboard/DepartmentOverviewPage.jsx";
+import OwnerPlansPage from "../pages/saas/OwnerPlansPage.jsx";
+import OwnerSalesPage from "../pages/saas/OwnerSalesPage.jsx";
+import LeadCrmPage from "../pages/saas/LeadCrmPage.jsx";
+import SupportAccessPage from "../pages/saas/SupportAccessPage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
   switch (page) {
+    case "Fabric Dashboard":
+      return (
+        <DepartmentOverviewPage
+          department="FABRIC"
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Cutting Dashboard":
+      return (
+        <DepartmentOverviewPage
+          department="CUTTING"
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Delivery Dashboard":
+      return (
+        <DepartmentOverviewPage
+          department="DELIVERY"
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Admin Dashboard":
+      return (
+        <DepartmentOverviewPage
+          department="ADMIN"
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Accessories Dashboard":
+      return <DashboardPage />;
+    case "Elastic Dashboard":
+      return <ProductionDashboardPage />;
+    case "Vendor Registration":
+      return <DeliveryDepartmentPage mode="vendors" notify={notify} />;
+    case "Delivery Plan Details":
+      return (
+        <DeliveryDepartmentPage
+          mode="plans"
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Section Plan":
+      return <DeliveryDepartmentPage mode="section" notify={notify} />;
+    case "Section History":
+      return <DeliveryDepartmentPage mode="history" notify={notify} />;
+    case "Fabric Inward Entry":
+      return <FabricInwardPage notify={notify} />;
+    case "Fabric Inward Print":
+      return (
+        <DepartmentRecordPage
+          mode="print"
+          departmentType="FABRIC"
+          notify={notify}
+        />
+      );
+    case "Fabric Roll QR Print":
+      return <FabricQrPrintPage notify={notify} />;
+    case "Fabric Inward History":
+      return (
+        <DepartmentRecordPage
+          mode="history"
+          departmentType="FABRIC"
+          notify={notify}
+        />
+      );
+    case "Fabric Entry":
+    case "Fabric to Cutting Entry":
+      return <ProductionPlanEntryPage notify={notify} />;
+    case "Planning Machine Wise":
+      return <ProductionPlanningPage notify={notify} />;
+    case "Machine Plan Entry":
+    case "Machine Plan":
+      return <CuttingMachinePlanPage mode="plan" notify={notify} />;
+    case "Plan Number Status":
+      return <CuttingMachinePlanPage mode="plan-status" notify={notify} />;
+    case "Cutter Status":
+      return <CuttingMachinePlanPage mode="status" notify={notify} />;
+    case "Folding Entry":
+      return <FoldingEntryPage notify={notify} />;
+    case "Plan Print":
+    case "Fabric Plan Print":
+      return <DepartmentPlanPrintPage type="fabric" notify={notify} />;
+    case "Folding Print":
+      return <DepartmentPlanPrintPage type="folding" notify={notify} />;
+    case "Cutting Plan Print":
+      return <DepartmentPlanPrintPage type="cutting" notify={notify} />;
+    case "Elastic Plan Print":
+      return <DepartmentPlanPrintPage type="elastic" notify={notify} />;
+    case "Fabric Plan History":
+    case "Cutting Plan History":
+      return (
+        <ProductionPlanHistoryPage
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Inward Stock":
+    case "Fabric Stock Inward":
+      return <FabricStockPage mode="inward" notify={notify} />;
+    case "Fabric Stock Balance":
+      return <FabricStockPage mode="balance" notify={notify} />;
+    case "Fabric Stock Waste":
+      return <FabricCuttingPage mode="waste" notify={notify} />;
+    case "Machine Detail Entry & QR Print":
+      return <ProductionSetupPage mode="machine" notify={notify} />;
+    case "Cutting Pending":
+      return <CuttingStockPage mode="pending" notify={notify} />;
+    case "Cutting Stock":
+      return <CuttingStockPage mode="stock" notify={notify} />;
+    case "Cutting Waste":
+      return <CuttingStockPage mode="waste" notify={notify} />;
+    case "Spreader Timeline":
+      return (
+        <CuttingMachinePlanPage mode="timeline-spreader" notify={notify} />
+      );
+    case "Separator Timeline":
+      return (
+        <CuttingMachinePlanPage mode="timeline-spreader" notify={notify} />
+      );
+    case "Cutter Timeline":
+      return <CuttingMachinePlanPage mode="timeline-cutter" notify={notify} />;
+    case "Machine Reports":
+      return <CuttingMachinePlanPage mode="machine-reports" notify={notify} />;
+    case "Cutting Time History":
+      return <CuttingMachinePlanPage mode="time-history" notify={notify} />;
+    case "Fabric Master":
+      return <FabricMasterPage notify={notify} />;
+    case "Fabric Inward":
+      return <FabricInwardPage notify={notify} />;
+    case "Item Master":
+      return <GarmentItemMasterPage notify={notify} />;
+    case "Company Dashboard":
+      return (
+        <CompanyAdminDashboardPage
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Department Dashboard":
+      return <DepartmentDashboardPage onPageChange={onPageChange} />;
+    case "Company Reports":
+    case "Company Timeline":
+    case "Company Stock":
+    case "Company Approvals":
+    case "Department Approvals":
+      return <CompanyInsightsPage mode={page} notify={notify} />;
+    case "Subscription Plan":
+    case "Subscription Purchase":
+    case "Subscription Bills":
+    case "Subscription Usage":
+      return <SubscriptionCenterPage mode={page} />;
+    case "Support Access":
+      return <SupportAccessPage />;
+    case "Production Plan Data Entry":
+      return <ProductionPlanEntryPage notify={notify} />;
+    case "Production Plan Print":
+      return <ProductionPlanPrintPage notify={notify} />;
+    case "Production Plan History":
+      return (
+        <ProductionPlanHistoryPage
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Fabric Stock":
+      return <FabricStockPage notify={notify} />;
+    case "Department History":
+      return <DepartmentRecordPage mode="history" notify={notify} />;
+    case "Department Print":
+      return <DepartmentRecordPage mode="print" notify={notify} />;
+    case "Cutting Actual Entry":
+      return <FabricCuttingPage mode="actual" notify={notify} />;
+    case "Fabric Waste":
+      return <FabricCuttingPage mode="waste" notify={notify} />;
+    case "Elastic Requirement":
+      return <FabricCuttingPage mode="elastic" notify={notify} />;
     case "SaaS Owner Dashboard":
       return <SuperAdminDashboardPage notify={notify} />;
     case "Companies":
       return <CompanyManagementPage notify={notify} />;
     case "Subscriptions":
       return <SaasControlPage notify={notify} />;
+    case "Plans":
+      return <OwnerPlansPage notify={notify} />;
+    case "Payments & Sales":
+      return <OwnerSalesPage notify={notify} />;
+    case "Lead CRM":
+      return <LeadCrmPage notify={notify} />;
     case "Owner Users":
       return <UserManagementPage notify={notify} />;
     case "Account Details":
@@ -105,8 +316,18 @@ export default function AppRoutes({ page, notify, onPageChange }) {
     case "Reports & Traceability":
       return <ReportsPage notify={notify} />;
     default:
-      return user?.role?.includes("production") || ["supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only"].includes(user?.role)
-        ? <ProductionDashboardPage />
-        : <DashboardPage />;
+      return user?.role?.includes("production") ||
+        [
+          "supervisor",
+          "quality",
+          "maintenance",
+          "sewing_coordinator",
+          "management",
+          "view_only",
+        ].includes(user?.role) ? (
+        <ProductionDashboardPage />
+      ) : (
+        <DashboardPage />
+      );
   }
 }

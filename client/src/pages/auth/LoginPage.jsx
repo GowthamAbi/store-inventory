@@ -3,17 +3,31 @@ import { Sparkles } from "lucide-react";
 import { api } from "../../api.js";
 import Field from "../../components/common/Field.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
+import { companyKeyFromLocation, tenantLoginPath } from "../../utils/tenantClient.js";
 
 export default function LoginPage({ initialMode = false }) {
+  const companyKey = companyKeyFromLocation();
   const { login } = useAuth();
   const [registerMode, setRegisterMode] = useState(
     initialMode === true || initialMode === "register",
   );
   const [submitting, setSubmitting] = useState(false);
   const [setupRequired, setSetupRequired] = useState(false);
-  const resetToken = new URLSearchParams(window.location.search).get("resetToken");
+  const resetToken = new URLSearchParams(window.location.search).get(
+    "resetToken",
+  );
+  const verifyToken = new URLSearchParams(window.location.search).get("verifyToken");
   const [forgotMode, setForgotMode] = useState(Boolean(resetToken));
-  const [form, setForm] = useState({ name: "", companyName: "", factoryName: "", email: "", password: "", role: "store" });
+  const [form, setForm] = useState({
+    name: "",
+    companyName: "",
+    factoryName: "",
+    email: "",
+    userId: "",
+    companyKey,
+    password: "",
+    role: "store",
+  });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -25,6 +39,21 @@ export default function LoginPage({ initialMode = false }) {
       })
       .catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    if (!verifyToken) return;
+    setSubmitting(true);
+    api("/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify({ token: verifyToken, companyKey }),
+    })
+      .then((data) => {
+        setSuccess(data.message);
+        window.history.replaceState({}, "", tenantLoginPath(companyKey));
+      })
+      .catch((requestError) => setError(requestError.message))
+      .finally(() => setSubmitting(false));
+  }, [verifyToken, companyKey]);
 
   async function submit(event) {
     event.preventDefault();
@@ -52,14 +81,19 @@ export default function LoginPage({ initialMode = false }) {
     setError("");
     setSuccess("");
     try {
-      const data = await api(resetToken ? "/auth/reset-password" : "/auth/forgot-password", {
-        method: "POST",
-        body: JSON.stringify(resetToken
-          ? { token: resetToken, password: form.password }
-          : { email: form.email }),
-      });
+      const data = await api(
+        resetToken ? "/auth/reset-password" : "/auth/forgot-password",
+        {
+          method: "POST",
+          body: JSON.stringify(
+            resetToken
+              ? { token: resetToken, password: form.password, companyKey }
+              : { userId: form.userId, companyKey },
+          ),
+        },
+      );
       setSuccess(data.message);
-      if (resetToken) window.history.replaceState({}, "", "/");
+      if (resetToken) window.history.replaceState({}, "", tenantLoginPath(companyKey));
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -71,18 +105,56 @@ export default function LoginPage({ initialMode = false }) {
     return (
       <div className="auth">
         <form onSubmit={submitPasswordRequest}>
-          <div className="auth-logo"><Sparkles /></div>
+          <div className="auth-logo">
+            <Sparkles />
+          </div>
           <h1>{resetToken ? "Reset password" : "Forgot password"}</h1>
-          <p>{resetToken ? "Enter your new password" : "Enter your registered email"}</p>
+          <p>
+            {resetToken
+              ? "Enter your new password"
+              : "Enter your User ID. Reset link will be sent to your registered email."}
+          </p>
           {!resetToken ? (
-            <Field label="Email"><input type="email" required value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></Field>
+            <Field label="User ID">
+              <input
+                autoCapitalize="characters"
+                required
+                placeholder="UGS-FAB-GOW-1047"
+                value={form.userId}
+                onChange={(event) =>
+                  setForm({ ...form, userId: event.target.value.toUpperCase() })
+                }
+              />
+            </Field>
           ) : (
-            <Field label="New Password"><input type="password" minLength="6" required value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></Field>
+            <Field label="New Password">
+              <input
+                type="password"
+                minLength="12"
+                required
+                value={form.password}
+                onChange={(event) =>
+                  setForm({ ...form, password: event.target.value })
+                }
+              />
+            </Field>
           )}
           {error && <div className="error">{error}</div>}
           {success && <div className="success-message">{success}</div>}
-          <button className="primary" disabled={submitting}>{submitting ? "Please wait..." : resetToken ? "Reset Password" : "Send Reset Link"}</button>
-          <button type="button" className="link" onClick={() => setForgotMode(false)}>Back to Login</button>
+          <button className="primary" disabled={submitting}>
+            {submitting
+              ? "Please wait..."
+              : resetToken
+                ? "Reset Password"
+                : "Send Reset Link"}
+          </button>
+          <button
+            type="button"
+            className="link"
+            onClick={() => setForgotMode(false)}
+          >
+            Back to Login
+          </button>
         </form>
       </div>
     );
@@ -94,35 +166,63 @@ export default function LoginPage({ initialMode = false }) {
         <div className="auth-logo">
           <Sparkles />
         </div>
-        <h1>Accessories Flow</h1>
-        <p>{registerMode ? "Create the SaaS Owner account · First setup only" : "Admin, Store and Production users sign in here"}</p>
+        <h1>UG SaaS</h1>
+        <div className="tenant-login-badge">
+          Workspace: <b>{companyKey === "platform" ? "Platform Owner" : companyKey}</b>
+        </div>
+        <p>
+          {registerMode
+            ? "Create the SaaS Owner account · First setup only"
+            : "Admin, Store and Production users sign in here"}
+        </p>
 
         {registerMode && (
-          <><Field label="Administrator Name">
-            <input
-              required
-              value={form.name}
-              onChange={(event) =>
-                setForm({ ...form, name: event.target.value })
-              }
-            />
-          </Field><Field label="Company Name"><input required value={form.companyName} onChange={(event) => setForm({ ...form, companyName: event.target.value })} /></Field><Field label="Factory Name"><input required value={form.factoryName} onChange={(event) => setForm({ ...form, factoryName: event.target.value })} /></Field></>
+          <>
+            <Field label="Administrator Name">
+              <input
+                required
+                value={form.name}
+                onChange={(event) =>
+                  setForm({ ...form, name: event.target.value })
+                }
+              />
+            </Field>
+            <Field label="Company Name">
+              <input
+                required
+                value={form.companyName}
+                onChange={(event) =>
+                  setForm({ ...form, companyName: event.target.value })
+                }
+              />
+            </Field>
+            <Field label="Factory Name">
+              <input
+                required
+                value={form.factoryName}
+                onChange={(event) =>
+                  setForm({ ...form, factoryName: event.target.value })
+                }
+              />
+            </Field>
+          </>
         )}
 
-        <Field label="Email">
-          <input
-            type="email"
-            required
-            value={form.email}
-            onChange={(event) =>
-              setForm({ ...form, email: event.target.value })
-            }
-          />
-        </Field>
+        {registerMode ? (
+          <Field label="Recovery Email">
+            <input type="email" required value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
+          </Field>
+        ) : (
+          <Field label="User ID">
+            <input autoCapitalize="characters" autoComplete="username" required placeholder="UGS-FAB-GOW-1047" value={form.userId} onChange={(event) => setForm({ ...form, userId: event.target.value.toUpperCase() })} />
+          </Field>
+        )}
 
         <Field label="Password">
           <input
             type="password"
+            minLength="12"
+            autoComplete={registerMode ? "new-password" : "current-password"}
             required
             value={form.password}
             onChange={(event) =>
@@ -130,8 +230,14 @@ export default function LoginPage({ initialMode = false }) {
             }
           />
         </Field>
+        {registerMode && (
+          <small className="password-policy">
+            Minimum 12 characters · uppercase · lowercase · number · special character
+          </small>
+        )}
 
         {error && <div className="error">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
 
         <button className="primary" type="submit" disabled={submitting}>
           {submitting
@@ -143,12 +249,33 @@ export default function LoginPage({ initialMode = false }) {
               : "Login"}
         </button>
 
-        {setupRequired && <button type="button" className="link" onClick={() => setRegisterMode(!registerMode)}>{registerMode ? "Already registered? Login" : "First-time SaaS Owner Setup"}</button>}
-        {!registerMode && (
-          <button type="button" className="link" onClick={() => setForgotMode(true)}>Forgot Password?</button>
+        {setupRequired && (
+          <button
+            type="button"
+            className="link"
+            onClick={() => setRegisterMode(!registerMode)}
+          >
+            {registerMode
+              ? "Already registered? Login"
+              : "First-time SaaS Owner Setup"}
+          </button>
         )}
-        {!registerMode && <div className="login-role-note"><b>One secure login page</b><span>Your email opens the correct workspace</span><small>SaaS Owner · Company Admin · Store · Production</small></div>}
-        <button type="button" className="link" onClick={() => { window.location.href = "/privacy"; }}>Privacy Policy</button>
+        {!registerMode && (
+          <button
+            type="button"
+            className="link"
+            onClick={() => setForgotMode(true)}
+          >
+            Forgot Password?
+          </button>
+        )}
+        {!registerMode && (
+          <div className="login-role-note">
+            <b>One secure login page</b>
+            <span>Company URL + User ID opens the correct workspace</span>
+            <small>SaaS Owner · Company Admin · Store · Production</small>
+          </div>
+        )}
       </form>
     </div>
   );

@@ -1,13 +1,36 @@
 import { Router } from "express";
-import { createCompany, getCompanies, getCompanyWorkspace, updateCompany, updateCompanyUser } from "../controllers/companyController.js";
+import {
+  controlCompanySubscription,
+  createCompany,
+  getCompanies,
+  getCompanyWorkspace,
+  updateCompany,
+  updateCompanyUser,
+} from "../controllers/companyController.js";
 import { allowRoles } from "../middleware/roleMiddleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const router = Router();
-router.use(allowRoles("saas_super_admin"));
-router.get("/", asyncHandler(getCompanies));
-router.post("/", asyncHandler(createCompany));
-router.get("/:id/workspace", asyncHandler(getCompanyWorkspace));
-router.patch("/:id/users/:userId", asyncHandler(updateCompanyUser));
-router.put("/:id", asyncHandler(updateCompany));
+router.get(
+  "/",
+  allowRoles("saas_super_admin", "company_admin"),
+  asyncHandler(getCompanies),
+);
+router.post("/", allowRoles("saas_super_admin"), asyncHandler(createCompany));
+router.get(
+  "/:id/workspace",
+  allowRoles("company_admin"),
+  asyncHandler(getCompanyWorkspace),
+);
+router.patch(
+  "/:id/users/:userId",
+  allowRoles("company_admin"),
+  asyncHandler(updateCompanyUser),
+);
+router.put("/:id", allowRoles("saas_super_admin"), asyncHandler(updateCompany));
+router.patch(
+  "/:id/subscription",
+  allowRoles("saas_super_admin"),
+  asyncHandler(controlCompanySubscription),
+);
 export default router;

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const pendingIssueSchema = new mongoose.Schema(
   {
@@ -15,11 +16,26 @@ const pendingIssueSchema = new mongoose.Schema(
     shortageMtr: { type: Number, default: 0, min: 0 },
     issueType: {
       type: String,
-      enum: ["Material Shortage", "Colour Pending", "Elastic Rejected", "Production Hold", "Rework Pending", "Machine Breakdown", "Sewing Hold", "Delivery Pending", "Overdue Requirement", "Other"],
+      enum: [
+        "Material Shortage",
+        "Colour Pending",
+        "Elastic Rejected",
+        "Production Hold",
+        "Rework Pending",
+        "Machine Breakdown",
+        "Sewing Hold",
+        "Delivery Pending",
+        "Overdue Requirement",
+        "Other",
+      ],
       default: "Material Shortage",
     },
     reason: { type: String, required: true },
-    priority: { type: String, enum: ["Low", "Medium", "High", "Critical"], default: "Medium" },
+    priority: {
+      type: String,
+      enum: ["Low", "Medium", "High", "Critical"],
+      default: "Medium",
+    },
     neededDate: Date,
     expectedMaterialDate: Date,
     rejectedMtr: { type: Number, default: 0, min: 0 },
@@ -31,7 +47,20 @@ const pendingIssueSchema = new mongoose.Schema(
     spareUsed: { type: String, default: "" },
     status: {
       type: String,
-      enum: ["Pending", "Requested", "Material Requested", "Store Checking", "Purchase Required", "PO Raised", "In Transit", "Material Received", "Issued", "Resolved", "Reopened", "Cancelled"],
+      enum: [
+        "Pending",
+        "Requested",
+        "Material Requested",
+        "Store Checking",
+        "Purchase Required",
+        "PO Raised",
+        "In Transit",
+        "Material Received",
+        "Issued",
+        "Resolved",
+        "Reopened",
+        "Cancelled",
+      ],
       default: "Pending",
     },
     remarks: { type: String, default: "" },
@@ -41,4 +70,4 @@ const pendingIssueSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model("PendingIssue", pendingIssueSchema);
+export default createTenantModel("PendingIssue", pendingIssueSchema);

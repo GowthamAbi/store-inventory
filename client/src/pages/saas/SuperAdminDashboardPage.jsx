@@ -1,17 +1,514 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, ChevronDown, ChevronRight, Factory, Plus, ShieldCheck, Users } from "lucide-react";
+import {
+  Activity,
+  Building2,
+  ChevronDown,
+  ChevronRight,
+  Factory,
+  Plus,
+  ShieldCheck,
+  Users,
+  IndianRupee,
+  BellRing,
+} from "lucide-react";
 import { api } from "../../api.js";
 import Card from "../../components/common/Card.jsx";
 import PageTitle from "../../components/common/PageTitle.jsx";
 
-const newUser = { name:"",email:"",password:"",role:"store" };
+const roles = [
+  "company_admin",
+  "admin",
+  "fabric_admin",
+  "fabric_entry",
+  "cutting_admin",
+  "cutting_entry",
+  "accessories_admin",
+  "accessories_entry",
+  "elastic_admin",
+  "elastic_entry",
+  "stitching_admin",
+  "stitching_entry",
+  "store",
+  "production",
+  "production_planner",
+  "production_operator",
+  "supervisor",
+  "quality",
+  "maintenance",
+  "sewing_coordinator",
+  "management",
+  "view_only",
+  "department_incharge",
+  "department_entry",
+];
+
+const blankUser = {
+  name: "",
+  email: "",
+  password: "",
+  role: "fabric_entry",
+  department: "",
+};
+
 export default function SuperAdminDashboardPage({ notify }) {
-  const [companies,setCompanies]=useState([]); const [workspace,setWorkspace]=useState(null); const [openDepartment,setOpenDepartment]=useState(""); const [form,setForm]=useState(newUser);
-  const load=async()=>setCompanies(await api("/companies")); useEffect(()=>{load();},[]);
-  async function openCompany(company){setWorkspace(await api(`/companies/${company._id}/workspace`));setOpenDepartment("");}
-  async function createUser(event){event.preventDefault();await api("/auth/users",{method:"POST",body:JSON.stringify({...form,companyId:workspace.company._id,factoryId:workspace.company.factories?.[0]?._id})});setForm(newUser);await openCompany(workspace.company);notify("Company user created");}
-  async function toggleUser(user){await api(`/companies/${workspace.company._id}/users/${user._id}`,{method:"PATCH",body:JSON.stringify({active:!user.active})});await openCompany(workspace.company);notify(user.active?"User disabled":"User activated");}
-  const totals=useMemo(()=>({companies:companies.length,active:companies.filter(c=>c.active&&c.subscriptionStatus==="Active").length,users:companies.reduce((sum,c)=>sum+(c.userCount||0),0),trials:companies.filter(c=>c.subscriptionPlan==="Trial").length}),[companies]);
-  if(workspace)return <><button className="owner-back" onClick={()=>setWorkspace(null)}>← All Companies</button><PageTitle title={workspace.company.companyName} subtitle={`${workspace.company.subscriptionPlan} · ${workspace.company.subscriptionStatus}`}/><div className="company-workspace-summary"><div><Factory/><span><small>Factories</small><b>{workspace.company.factories?.length||0}</b></span></div><div><Users/><span><small>Users</small><b>{workspace.users.length}</b></span></div><div><ShieldCheck/><span><small>Subscription</small><b>{workspace.company.subscriptionStatus}</b></span></div></div><Card title="Department Access & Users"><div className="department-accordion">{Object.entries(workspace.departments).map(([department,users])=><section key={department}><button onClick={()=>setOpenDepartment(openDepartment===department?"":department)}>{openDepartment===department?<ChevronDown/>:<ChevronRight/>}<span><b>{department}</b><small>{users.length} users</small></span></button>{openDepartment===department&&<div className="department-users">{users.length?users.map(user=><div key={user._id}><span><b>{user.name}</b><small>{user.email}</small></span><code>{user.role}</code><span className={user.active?"status-green":"status-red"}>{user.active?"Active":"Disabled"}</span><button onClick={()=>toggleUser(user)}>{user.active?"Disable":"Activate"}</button></div>):<p>No users in this department.</p>}</div>}</section>)}</div></Card><Card title="Add User to This Company"><form className="owner-user-form" onSubmit={createUser}><input required placeholder="Full name" value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/><input required type="email" placeholder="Email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/><input required minLength="8" type="password" placeholder="Temporary password" value={form.password} onChange={e=>setForm({...form,password:e.target.value})}/><select value={form.role} onChange={e=>setForm({...form,role:e.target.value})}>{["company_admin","admin","store","production","production_planner","production_operator","supervisor","quality","maintenance","sewing_coordinator","management","view_only"].map(role=><option key={role}>{role}</option>)}</select><button className="primary"><Plus/> Create User</button></form></Card></>;
-  return <><PageTitle title="SaaS Owner Dashboard" subtitle="Companies, users, subscriptions and department access"/><div className="owner-stats"><div><Building2/><span><small>Total Companies</small><b>{totals.companies}</b></span></div><div><ShieldCheck/><span><small>Active Companies</small><b>{totals.active}</b></span></div><div><Users/><span><small>Total Users</small><b>{totals.users}</b></span></div><div><Factory/><span><small>Trial Companies</small><b>{totals.trials}</b></span></div></div><Card title="Company Workspaces"><div className="company-flex-grid">{companies.map(company=><button key={company._id} onClick={()=>openCompany(company)}><div className="company-card-icon"><Building2/></div><div><h3>{company.companyName}</h3><p>{company.factories?.map(f=>f.name).join(", ")||"No factory"}</p></div><span className={company.active&&company.subscriptionStatus==="Active"?"company-active":"company-inactive"}>{company.subscriptionStatus}</span><footer><small>{company.subscriptionPlan} Plan</small><small>{company.activeUsers||0}/{company.userCount||0} active users</small></footer></button>)}</div></Card></>;
+  const [companies, setCompanies] = useState([]);
+  const [workspace, setWorkspace] = useState(null);
+  const [openDepartment, setOpenDepartment] = useState("");
+  const [form, setForm] = useState(blankUser);
+  const [overview, setOverview] = useState(null);
+
+  async function load() {
+    try {
+      const [companyRows, ownerOverview] = await Promise.all([
+        api("/companies"),
+        api("/saas/owner-overview"),
+      ]);
+      setCompanies(companyRows);
+      setOverview(ownerOverview);
+    } catch (error) {
+      notify?.(error.message);
+    }
+  }
+
+  useEffect(() => {
+    load();
+    const refreshTimer = window.setInterval(load, 30000);
+    return () => window.clearInterval(refreshTimer);
+  }, []);
+
+  async function decideRequest(lead, action) {
+    const confirmed = window.confirm(
+      action === "ACCEPT"
+        ? lead.requestType === "TRIAL"
+          ? "Approve trial and activate this customer workspace?"
+          : "Accept this request for owner follow-up?"
+        : "Reject this customer request?",
+    );
+    if (!confirmed) return;
+
+    try {
+      const result = await api(`/saas/leads/${lead._id}/decision`, {
+        method: "PATCH",
+        body: JSON.stringify({ action }),
+      });
+      notify?.(result.message);
+      await load();
+    } catch (error) {
+      notify?.(error.message);
+    }
+  }
+
+  async function openCompany(company) {
+    try {
+      setWorkspace(await api("/companies/" + company._id + "/workspace"));
+      setOpenDepartment("");
+    } catch (error) {
+      notify?.(error.message);
+    }
+  }
+
+  async function createUser(event) {
+    event.preventDefault();
+    try {
+      await api("/auth/users", {
+        method: "POST",
+        body: JSON.stringify({
+          ...form,
+          companyId: workspace.company._id,
+          factoryId: workspace.company.factories?.[0]?._id,
+        }),
+      });
+      setForm(blankUser);
+      await openCompany(workspace.company);
+      notify?.("Company user created");
+    } catch (error) {
+      notify?.(error.message);
+    }
+  }
+
+  async function toggleUser(user) {
+    try {
+      await api("/companies/" + workspace.company._id + "/users/" + user._id, {
+        method: "PATCH",
+        body: JSON.stringify({ active: !user.active }),
+      });
+      await openCompany(workspace.company);
+      notify?.(user.active ? "User disabled" : "User activated");
+    } catch (error) {
+      notify?.(error.message);
+    }
+  }
+
+  const totals = useMemo(
+    () => ({
+      companies: companies.length,
+      active: companies.filter(
+        (company) => company.active && company.subscriptionStatus === "Active",
+      ).length,
+      users: companies.reduce(
+        (sum, company) => sum + (company.userCount || 0),
+        0,
+      ),
+      trials: companies.filter(
+        (company) => company.subscriptionPlan === "Trial",
+      ).length,
+    }),
+    [companies],
+  );
+
+  if (workspace) {
+    const activity = new Map(
+      (workspace.departmentActivity || []).map((row) => [row.department, row]),
+    );
+
+    return (
+      <>
+        <button className="owner-back" onClick={() => setWorkspace(null)}>
+          ← All Companies
+        </button>
+
+        <PageTitle
+          title={workspace.company.companyName}
+          subtitle={
+            workspace.company.subscriptionPlan +
+            " · " +
+            workspace.company.subscriptionStatus
+          }
+        />
+
+        <div className="company-workspace-summary">
+          <Summary
+            icon={<Factory />}
+            label="Factories"
+            value={workspace.company.factories?.length || 0}
+          />
+          <Summary
+            icon={<Users />}
+            label="Users"
+            value={workspace.users.length}
+          />
+          <Summary
+            icon={<ShieldCheck />}
+            label="Subscription"
+            value={workspace.company.subscriptionStatus}
+          />
+          <Summary
+            icon={<Activity />}
+            label="Recent Actions"
+            value={workspace.recentActivity?.length || 0}
+          />
+        </div>
+
+        <Card title="Department Access, Users & Activity">
+          <div className="department-accordion">
+            {Object.entries(workspace.departments).map(
+              ([department, users]) => {
+                const departmentKey = department
+                  .replace(" Store", "")
+                  .replace(" Production", "")
+                  .split(" / ")[0]
+                  .toUpperCase();
+                const usage = activity.get(departmentKey);
+
+                return (
+                  <section key={department}>
+                    <button
+                      onClick={() =>
+                        setOpenDepartment(
+                          openDepartment === department ? "" : department,
+                        )
+                      }
+                    >
+                      {openDepartment === department ? (
+                        <ChevronDown />
+                      ) : (
+                        <ChevronRight />
+                      )}
+                      <span>
+                        <b>{department}</b>
+                        <small>
+                          {users.length} users · {usage?.entries || 0} entries ·{" "}
+                          {usage?.quantity || 0} processed
+                        </small>
+                      </span>
+                    </button>
+
+                    {openDepartment === department && (
+                      <div className="department-users">
+                        {users.length ? (
+                          users.map((user) => (
+                            <div key={user._id}>
+                              <span>
+                                <b>{user.name}</b>
+                                <small>{user.email}</small>
+                              </span>
+                              <code>{user.role}</code>
+                              <span
+                                className={
+                                  user.active ? "status-green" : "status-red"
+                                }
+                              >
+                                {user.active ? "Active" : "Disabled"}
+                              </span>
+                              <button onClick={() => toggleUser(user)}>
+                                {user.active ? "Disable" : "Activate"}
+                              </button>
+                            </div>
+                          ))
+                        ) : (
+                          <p>No users in this department.</p>
+                        )}
+                      </div>
+                    )}
+                  </section>
+                );
+              },
+            )}
+          </div>
+        </Card>
+
+        <Card title="Add Department User">
+          <form className="owner-user-form" onSubmit={createUser}>
+            <input
+              required
+              placeholder="Full name"
+              value={form.name}
+              onChange={(event) =>
+                setForm({ ...form, name: event.target.value })
+              }
+            />
+            <input
+              required
+              type="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={(event) =>
+                setForm({ ...form, email: event.target.value })
+              }
+            />
+            <input
+              required
+              minLength="12"
+              type="password"
+              placeholder="Temporary password"
+              value={form.password}
+              onChange={(event) =>
+                setForm({ ...form, password: event.target.value })
+              }
+            />
+            <select
+              value={form.role}
+              onChange={(event) =>
+                setForm({ ...form, role: event.target.value })
+              }
+            >
+              {roles.map((role) => (
+                <option key={role}>{role}</option>
+              ))}
+            </select>
+            {["department_incharge", "department_entry"].includes(
+              form.role,
+            ) && (
+              <select
+                required
+                value={form.department}
+                onChange={(event) =>
+                  setForm({ ...form, department: event.target.value })
+                }
+              >
+                <option value="">Select department</option>
+                {[
+                  "FABRIC",
+                  "CUTTING",
+                  "ACCESSORIES",
+                  "ELASTIC",
+                  "STITCHING",
+                  "FINISHING",
+                  "PACKING",
+                  "DISPATCH",
+                ].map((department) => (
+                  <option key={department}>{department}</option>
+                ))}
+              </select>
+            )}
+            <button className="primary">
+              <Plus />
+              Create User
+            </button>
+          </form>
+        </Card>
+
+        <Card title="Latest Company Activity">
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>Action</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(workspace.recentActivity || []).map((row) => (
+                  <tr key={row._id}>
+                    <td>{new Date(row.createdAt).toLocaleString()}</td>
+                    <td>{row.actorName}</td>
+                    <td>{row.actorRole}</td>
+                    <td>{row.action}</td>
+                    <td>{row.statusCode}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <PageTitle
+        title="SaaS Owner Dashboard"
+        subtitle="Companies, subscriptions, department usage and access control"
+      />
+
+      <div className="owner-stats">
+        <Summary
+          icon={<Building2 />}
+          label="Total Companies"
+          value={totals.companies}
+        />
+        <Summary
+          icon={<ShieldCheck />}
+          label="Active Companies"
+          value={totals.active}
+        />
+        <Summary icon={<Users />} label="Total Users" value={totals.users} />
+        <Summary
+          icon={<Factory />}
+          label="Trial Companies"
+          value={totals.trials}
+        />
+        <Summary
+          icon={<IndianRupee />}
+          label="Total Revenue"
+          value={`₹${Number(overview?.metrics?.revenue || 0).toLocaleString("en-IN")}`}
+        />
+        <Summary
+          icon={<BellRing />}
+          label="New Requests"
+          value={overview?.metrics?.newRequests || 0}
+        />
+      </div>
+
+      <div className="classic-two-column">
+        <Card title="New Demo / Purchase Requests">
+          <div className="recent-activity">
+            {(overview?.recentLeads || []).slice(0, 6).map((row) => (
+              <div key={row._id}>
+                <span>
+                  <b>{row.companyName}</b>
+                  <small>
+                    {row.city || "—"} · {row.planCode || "Plan not selected"} ·{" "}
+                    {row.status}
+                  </small>
+                </span>
+                <span className="owner-request-actions">
+                  <time>{new Date(row.createdAt).toLocaleDateString()}</time>
+                  {["NEW", "TRIAL_PENDING"].includes(row.status) && (
+                    <span>
+                      <button
+                        className="primary"
+                        onClick={() => decideRequest(row, "ACCEPT")}
+                      >
+                        Accept
+                      </button>
+                      <button
+                        className="danger"
+                        onClick={() => decideRequest(row, "REJECT")}
+                      >
+                        Reject
+                      </button>
+                    </span>
+                  )}
+                </span>
+              </div>
+            ))}
+            {!overview?.recentLeads?.length && <p>No new requests.</p>}
+          </div>
+        </Card>
+        <Card title="Plan Performance">
+          <div className="sales-bars">
+            {(overview?.planSales || []).map((row) => (
+              <div key={row.name}>
+                <span>
+                  <b>{row.name}</b>
+                  <small>
+                    {row.customers} companies · ₹
+                    {Number(row.revenue).toLocaleString("en-IN")}
+                  </small>
+                </span>
+                <i>
+                  <em
+                    style={{ width: `${Math.min(100, row.customers * 12)}%` }}
+                  />
+                </i>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      <Card title="Company Workspaces">
+        <div className="company-flex-grid">
+          {companies.map((company) => (
+            <button key={company._id} onClick={() => openCompany(company)}>
+              <div className="company-card-icon">
+                <Building2 />
+              </div>
+              <div>
+                <h3>{company.companyName}</h3>
+                <p>
+                  {company.factories
+                    ?.map((factory) => factory.name)
+                    .join(", ") || "No factory"}
+                </p>
+              </div>
+              <span
+                className={
+                  company.active && company.subscriptionStatus === "Active"
+                    ? "company-active"
+                    : "company-inactive"
+                }
+              >
+                {company.subscriptionStatus}
+              </span>
+              <footer>
+                <small>{company.subscriptionPlan} Plan</small>
+                <small>
+                  {company.activeUsers || 0}/{company.userCount || 0} active
+                  users
+                </small>
+              </footer>
+            </button>
+          ))}
+        </div>
+      </Card>
+    </>
+  );
+}
+
+function Summary({ icon, label, value }) {
+  return (
+    <div>
+      {icon}
+      <span>
+        <small>{label}</small>
+        <b>{value}</b>
+      </span>
+    </div>
+  );
 }
