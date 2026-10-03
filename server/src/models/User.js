@@ -10,7 +10,13 @@ const userSchema = new mongoose.Schema(
       uppercase: true,
       trim: true,
       immutable: true,
-      match: /^UGS-[A-Z]{3}-[A-Z]{3}-\d{4}$/,
+      validate: {
+        validator: function (value) {
+          return /^UGS-[A-Z]{3}-[A-Z]{3}-\d{4}$/.test(value) ||
+            (this.role === "saas_super_admin" && value === "GOWTHAM2131");
+        },
+        message: "Invalid User ID format",
+      },
     },
     name: { type: String, required: true, trim: true },
     email: {
