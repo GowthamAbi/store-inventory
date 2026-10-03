@@ -7,6 +7,7 @@ import FabricMaster from "../models/FabricMaster.js";
 /** Connect the application to MongoDB Atlas. */
 export async function connectDatabase() {
   await mongoose.connect(process.env.MONGODB_URI);
+  console.log("MangoDB Connected");
 
   // Older releases created a unique PO-number-only index. Remove only that
   // legacy index so a PO can safely contain multiple item-code lines.
