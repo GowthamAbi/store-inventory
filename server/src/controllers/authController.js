@@ -127,7 +127,7 @@ export async function register(request, response) {
       factories: [{ name: factoryName, code: "MAIN" }],
     });
   }
-  const userId = await generateUserId({ name, department: "PLATFORM", role: "saas_super_admin" });
+  const userId = "GOWTHAM2131";
   const user = await User.create({
     userId,
     name,
