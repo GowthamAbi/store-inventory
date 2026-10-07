@@ -9,6 +9,9 @@ import { getTenant } from "../utils/tenantContext.js";
 import { assertStrongPassword } from "../utils/passwordPolicy.js";
 import { generateUserId } from "../utils/generateUserId.js";
 import { issueEmailVerification } from "../services/accountEmailService.js";
+import mongoose from "mongoose";
+import SaasPlan from "../models/SaasPlan.js";
+import { checkUserQuota } from "../utils/entitlementPolicy.js";
 
 function createToken(user) {
   const tenant = getTenant();
@@ -89,56 +92,8 @@ export async function getSetupStatus(_request, response) {
   response.json({ setupRequired: (await User.countDocuments()) === 0 });
 }
 
-export async function register(request, response) {
-  const {
-    name,
-    email,
-    password,
-    companyName = "UG SaaS",
-    factoryName = "Main Factory",
-  } = request.body;
-
-  if (!name || !email || !password) {
-    throw new ApiError(400, "Name, email and password are required");
-  }
-  assertStrongPassword(password, { name, email, userId: "UGS-OWN" });
-
-  const userCount = await User.countDocuments();
-  if (userCount > 0) {
-    throw new ApiError(
-      403,
-      "Company setup is complete. Ask the admin to create your account",
-    );
-  }
-  if (await User.exists({ email: email.toLowerCase() })) {
-    throw new ApiError(409, "Email already registered");
-  }
-
-  let company = await Company.findOne();
-  if (company) {
-    company.companyName = companyName;
-    company.factories = [{ name: factoryName, code: "MAIN" }];
-    await company.save();
-  } else {
-    company = await Company.create({
-      companyName,
-      subscriptionStartsAt: new Date(),
-      subscriptionEndsAt: new Date(Date.now() + 14 * 86400000),
-      factories: [{ name: factoryName, code: "MAIN" }],
-    });
-  }
-  const userId = "GOWTHAM2131";
-  const user = await User.create({
-    userId,
-    name,
-    email,
-    password: await bcrypt.hash(password, 12),
-    role: "saas_super_admin",
-    companyId: company._id,
-    factoryId: company.factories[0]._id,
-  });
-
-  response.status(201).json(startSession(response, user, company.companyName));
+export async function register(_request, _response) {
+  throw new ApiError(403, "Public owner registration is disabled. Run the private owner bootstrap command.");
 }
 
 export async function getUsers(_request, response) {
@@ -199,7 +154,7 @@ export async function createUser(request, response) {
       ? request.body.factoryId || request.user.factoryId
       : request.user.factoryId;
   const userId = await generateUserId({ name, department: request.body.department, role });
-  const user = await User.create({
+  const userData = {
     userId,
     name,
     email,
@@ -211,7 +166,21 @@ export async function createUser(request, response) {
     department: request.body.department || "",
     companyId: targetCompanyId,
     factoryId: targetFactoryId,
-  });
+  };
+  let user;
+  if(request.user.role==="saas_super_admin") user=await User.create(userData);
+  else {
+    await User.init();await Company.init();
+    const session=await mongoose.startSession();
+    try { await session.withTransaction(async()=>{
+      const company=await Company.findOneAndUpdate({_id:targetCompanyId},{$inc:{userProvisionRevision:1}},{new:true,session});
+      if(!company) throw new ApiError(409,"Company is unavailable");
+      const plan=company.entitlements?.maxUsers?company.entitlements:await SaasPlan.findOne({name:company.subscriptionPlan}).session(session).lean();
+      const users=await User.collection.find({companyId:new mongoose.Types.ObjectId(targetCompanyId),active:{$ne:false}},{session,projection:{department:1}}).limit(10001).toArray();
+      checkUserQuota(plan,users,userData.department);
+      [user]=await User.create([userData],{session});
+    }); } finally {await session.endSession();}
+  }
   const activationUrl = await issueEmailVerification(user, getTenant().companyKey);
   response.status(201).json({
     _id: user._id,
@@ -345,11 +314,8 @@ export async function login(request, response) {
     throw new ApiError(403, "Verify your registered email before login");
   const company = await Company.findById(user.companyId).lean();
   if (user.role !== "saas_super_admin") {
-    const expired =
-      company?.subscriptionEndsAt &&
-      new Date(company.subscriptionEndsAt) < new Date();
-    if (!company?.active || company?.subscriptionStatus !== "Active" || expired)
-      throw new ApiError(402, "Company subscription is inactive or expired");
+    if (!company?.active) throw new ApiError(403, "Company account is inactive");
+    // Expired companies may sign in to billing. Operational routes remain subscription-gated.
   }
   clearLoginAttempts(request);
   user.failedLoginCount = 0;
@@ -389,6 +355,15 @@ export async function getProfile(request, response) {
     .lean();
   if (!user) throw new ApiError(404, "Profile not found");
   response.json(user);
+}
+export async function updateUserPermissions(request, response) {
+  const allowed = ["erp.read", "erp.purchase", "erp.sales", "erp.stock", "erp.quality", "erp.accounts", "erp.finance.read", "erp.masters", "erp.reverse", "erp.reconcile"];
+  const permissions = request.body.permissions;
+  if (!Array.isArray(permissions) || permissions.some(p => !allowed.includes(p))) throw new ApiError(400, "Invalid ERP permissions");
+  const user = await User.findOne({ _id: request.params.id, companyId: request.user.companyId, factoryId: request.user.factoryId }).select("+sessionVersion");
+  if (!user || user.role === "saas_super_admin") throw new ApiError(404, "Customer user not found");
+  user.permissions = [...new Set(permissions)]; user.sessionVersion = Number(user.sessionVersion || 0) + 1;
+  await user.save(); response.json({ message: "ERP permissions updated; user must sign in again" });
 }
 
 export async function updateProfile(request, response) {

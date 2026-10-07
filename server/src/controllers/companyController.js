@@ -7,6 +7,9 @@ import TenantRegistry from "../models/TenantRegistry.js";
 import { provisionTenant } from "../services/tenantProvisioningService.js";
 import { assertStrongPassword } from "../utils/passwordPolicy.js";
 import { runWithTenant } from "../utils/tenantContext.js";
+import mongoose from "mongoose";
+import SaasPlan from "../models/SaasPlan.js";
+import {checkUserQuota} from "../utils/entitlementPolicy.js";
 
 export async function getCompanies(request, response) {
   if (request.user.role === "saas_super_admin") {
@@ -137,24 +140,25 @@ export async function updateCompanyUser(request, response) {
   ];
   if (request.body.role && !allowedRoles.includes(request.body.role))
     throw new ApiError(400, "Invalid company role");
-  const user = await User.findOneAndUpdate(
-    { _id: request.params.userId, companyId: request.params.id },
-    {
-      ...(request.body.role && { role: request.body.role }),
-      ...(typeof request.body.active === "boolean" && {
-        active: request.body.active,
-      }),
-      ...(request.body.permissions && {
-        permissions: request.body.permissions,
-      }),
-      ...(request.body.department !== undefined && {
-        department: request.body.department,
-      }),
-    },
-    { new: true, runValidators: true },
-  ).select("name email role permissions active factoryId createdAt");
-  if (!user) throw new ApiError(404, "Company user not found");
-  response.json(user);
+  if(String(request.params.id)!==String(request.user.companyId)) throw new ApiError(403,"Own company user management only");
+  const session=await mongoose.startSession();let result;
+  try{await session.withTransaction(async()=>{
+    const company=await Company.findOneAndUpdate({_id:request.user.companyId},{$inc:{userProvisionRevision:1}},{new:true,session});
+    const user=await User.findOne({_id:request.params.userId,companyId:request.user.companyId,factoryId:request.user.factoryId}).select("+sessionVersion").session(session);
+    if(!company||!user||user.role==="saas_super_admin") throw new ApiError(404,"Company user not found");
+    const nextActive=typeof request.body.active==="boolean"?request.body.active:user.active;
+    const nextDepartment=request.body.department!==undefined?String(request.body.department):user.department;
+    if(nextActive){
+      const plan=company.entitlements?.maxUsers?company.entitlements:await SaasPlan.findOne({name:company.subscriptionPlan}).session(session).lean();
+      const users=await User.collection.find({companyId:company._id,_id:{$ne:user._id},active:{$ne:false}},{session,projection:{department:1}}).limit(10001).toArray();
+      checkUserQuota(plan,users,nextDepartment);
+    }
+    if(request.body.permissions&&(!Array.isArray(request.body.permissions)||request.body.permissions.some(p=>typeof p!=="string")))throw new ApiError(400,"Invalid permissions");
+    if(request.body.role)user.role=request.body.role;user.active=nextActive;user.department=nextDepartment;
+    if(request.body.permissions)user.permissions=request.body.permissions;
+    user.sessionVersion=Number(user.sessionVersion||0)+1;await user.save({session});
+    result={_id:user._id,name:user.name,email:user.email,role:user.role,department:user.department,permissions:user.permissions,active:user.active,factoryId:user.factoryId};
+  });}finally{await session.endSession();}response.json(result);
 }
 
 export async function createCompany(request, response) {

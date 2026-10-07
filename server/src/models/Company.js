@@ -22,15 +22,6 @@ const companySchema = new mongoose.Schema(
     address: { type: String, default: "" },
     subscriptionPlan: {
       type: String,
-      enum: [
-        "Trial",
-        "Starter",
-        "Basic",
-        "Professional",
-        "Business",
-        "Enterprise",
-        "Setup & Training",
-      ],
       default: "Trial",
     },
     subscriptionStatus: {
@@ -40,6 +31,8 @@ const companySchema = new mongoose.Schema(
     },
     subscriptionStartsAt: Date,
     subscriptionEndsAt: Date,
+    entitlements: { maxUsers:Number,maxDepartments:Number,modules:[String] },
+    userProvisionRevision: { type:Number,default:0 },
     preferredLanguage: { type: String, enum: ["en", "ta"], default: "en" },
     onboardingCompleted: { type: Boolean, default: false },
     privacyAcceptedAt: Date,

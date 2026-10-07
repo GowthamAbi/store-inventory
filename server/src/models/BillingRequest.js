@@ -8,6 +8,8 @@ const schema = new mongoose.Schema({
   referenceNo: { type: String, required: true },
   plan: { type: String, required: true },
   amount: { type: Number, required: true },
+  validityDays: { type: Number, min: 1 },
+  entitlements: { maxUsers:Number,maxDepartments:Number,modules:[String] },
   paymentMethod: { type: String, enum: ["MANUAL", "RAZORPAY"], required: true },
   providerOrderId: { type: String, index: true },
   status: { type: String, enum: ["CREATED", "PENDING_APPROVAL", "PAID", "FAILED", "REFUNDED"], default: "CREATED" },
